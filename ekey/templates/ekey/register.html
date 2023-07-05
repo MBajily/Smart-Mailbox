@@ -1,0 +1,33 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+<body>
+
+<div class="back"></div>
+<div class="registration-form">
+  <header>
+    <h1>Sign Up</h1>
+    <p>Fill in all informations</p>
+  </header>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="input-section email-section">
+      <input class="email" type="email" placeholder="email" autocomplete="off" name="email" />
+    </div>
+    <div class="input-section password-section folded">
+      <input class="password" type="password" placeholder="PASSWORD" name="password" />
+    </div>
+    <div class="input-section repeat-password-section folded">
+      <input class="repeat-password" type="password" placeholder="REPEAT PASSWORD" name="confirm" />
+    </div>
+    <input type="submit" name="Create" value="Create">
+  </form>
+</div>
+</body>
+</html>

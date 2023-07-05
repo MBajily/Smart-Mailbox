@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class EkayConfig(AppConfig):
+class EkeyConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'ekay'
+    name = 'ekey'
