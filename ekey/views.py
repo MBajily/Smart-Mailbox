@@ -1,5 +1,7 @@
 import os
 import hashlib
+import requests
+import time
 from django.shortcuts import render, redirect
 from ttlockwrapper import TTLock
 from dotenv import load_dotenv
@@ -30,3 +32,10 @@ def register(request):
 	context = {'title':'Register'}
 	
 	return render(request, 'ekey/register.html', context)
+
+
+def locksList(request):
+	user = request.user
+	payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':time.time()}
+	headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+	r = requests.get('', headers=headers, params=payload)
