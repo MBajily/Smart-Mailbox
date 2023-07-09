@@ -2,8 +2,9 @@ import os
 import hashlib
 from django.shortcuts import render, redirect
 from ttlockwrapper import TTLock
-import pprint
 from dotenv import load_dotenv
+from api.models import *
+
 
 load_dotenv()
 
@@ -19,10 +20,12 @@ def register(request):
 		password = request.POST['password']
 		if password == request.POST['confirm']:
 			username = str(email.split('@')[0])
-			print(username)
-			password = (hashlib.md5(password.encode()).hexdigest())
-		
-			ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=password)
+			password = hashlib.md5(password.encode()).hexdigest()
+			new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=password)
+			access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=new_user['username'], password=password, redirect_uri='/')
+			new_client = Client(email=email, password=password, username=username, access_token=access_token['access_token'])
+			if new_client:
+				new_client.save()
 
 	context = {'title':'Register'}
 	

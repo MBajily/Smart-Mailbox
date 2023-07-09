@@ -9,7 +9,7 @@ class User(AbstractUser):
 
     base_role = Role.CLIENT
 
-    username = None 
+    # username = None 
     last_login = None 
     first_name = None 
     last_name = None 
@@ -21,6 +21,7 @@ class User(AbstractUser):
     groups = None
     email = models.EmailField(unique=True)
     is_deleted = models.BooleanField(null=False, default=False)
+    access_token = models.CharField(max_length=50, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -50,20 +51,14 @@ class Client(User):
     class Meta:
         proxy = True
 
-# ===============================================================
-# =======================  Delivery  ============================
-# ===============================================================
-class DeliveryManager(BaseUserManager):
-    def get_queryset(self, *args, **kwargs):
-        results = super().get_queryset(*args, **kwargs)
-        return results.filter(role=User.Role.DELIVERY)
 
-
-class Delivery(User):
-    base_role = User.Role.DELIVERY
-
-    delivery = DeliveryManager()
-
-    class Meta:
-        proxy = True
-
+class Lock(models.Model):
+    # user = 
+    lock_id = models.CharField(primary_key=True, max_length=20, unique=True)
+    lock_name = models.CharField(max_length=100)
+    lock_alias = models.CharField(max_length=100)
+    lock_mac = models.CharField(max_length=100)
+    # group = 
+    key_id = models.CharField(max_length=20, unique=True)
+    date = models.DateField(auto_now_add=True,)
+    
