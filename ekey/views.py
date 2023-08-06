@@ -1,12 +1,14 @@
 import os
 import hashlib
 import requests
+import datetime
 import time
 from django.shortcuts import render, redirect
 from ttlockwrapper import TTLock
 from dotenv import load_dotenv
 from api.models import *
-
+from .forms import *
+from django.http import HttpResponse
 
 load_dotenv()
 
@@ -17,25 +19,50 @@ ttlock = TTLock(clientId, clientSecret)
 
 # Create your views here.
 def register(request):
-	if request.method == 'POST':
-		email = request.POST['email']
-		password = request.POST['password']
-		if password == request.POST['confirm']:
-			username = str(email.split('@')[0])
-			password = hashlib.md5(password.encode()).hexdigest()
-			new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=password)
-			access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=new_user['username'], password=password, redirect_uri='/')
-			new_client = Client(email=email, password=password, username=username, access_token=access_token['access_token'])
-			if new_client:
-				new_client.save()
+    if request.method == 'POST':
+        formset = RegisterForm(request.POST)
+        if formset.is_valid():
+            formset.save()
+            email = request.POST['email']
+            password = request.POST['password1']
+            username = str(email.split('@')[0])
+            hashed_password = hashlib.md5(password.encode()).hexdigest()
+            new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=hashed_password)
+            access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=new_user['username'], password=hashed_password, redirect_uri='/')
+            selected_client = User.objects.get(email=email)
+            selected_client.username = username
+            selected_client.access_token = access_token['access_token']
+            selected_client.save()
+            return redirect('locksList')
+    else:
+        formset = RegisterForm()
 
-	context = {'title':'Register'}
-	
-	return render(request, 'ekey/register.html', context)
+    context = {'title':'Sign up', 'formset':formset}
+
+    return render(request, "ekey/registration.html", context)
 
 
 def locksList(request):
-	user = request.user
-	payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':time.time()}
-	headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-	r = requests.get('', headers=headers, params=payload)
+    user = request.user
+    
+    date = round(time.time()*1000)
+
+    payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'pageNo':1, 'pageSize':20}
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    r = requests.get('https://cnapi.ttlock.com/v3/lock/list', headers=headers, params=payload)
+    return HttpResponse(r)
+
+
+def randomPasscode(request):
+    user = request.user
+    
+    date = round(time.time()*1000)
+
+    payload = {
+                'clientId':clientId, 'accessToken':user.access_token, 
+                'date':date, 'startDate':date,
+                'lockId':24451, 'keyboardPwdType':1,
+                }
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    r = requests.post('https://cnapi.ttlock.com/v3/lock/initialize', headers=headers, params=payload)
+    return HttpResponse(r)

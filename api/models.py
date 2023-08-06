@@ -22,6 +22,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     is_deleted = models.BooleanField(null=False, default=False)
     access_token = models.CharField(max_length=50, null=True)
+    hashed_password = models.CharField(max_length=100, null=True)
+    ttlock_username = models.CharField(max_length=100, unique=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
