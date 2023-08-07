@@ -9,7 +9,7 @@ class User(AbstractUser):
 
     base_role = Role.CLIENT
 
-    # username = None 
+    username = models.CharField(max_length=50, unique=True, null=True) 
     last_login = None 
     first_name = None 
     last_name = None 
