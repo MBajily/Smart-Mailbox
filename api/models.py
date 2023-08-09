@@ -1,13 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User, Group, Permission, AbstractUser, BaseUserManager
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 
 class User(AbstractUser):
     class Role(models.TextChoices):
-        CLIENT = "CLIENT", "Client"
+        USER = "USER", "User"
         DELIVERY = "DELIVERY", "Delivery"
 
-    base_role = Role.CLIENT
+    base_role = Role.USER
 
     username = models.CharField(max_length=50, unique=True, null=True) 
     last_login = None 
@@ -37,30 +39,137 @@ class User(AbstractUser):
 
 
 # ===============================================================
-# ========================  Client  =============================
+# =====================  User Profile  ==========================
 # ===============================================================
-class ClientManager(BaseUserManager):
-    def get_queryset(self, *args, **kwargs):
-        results = super().get_queryset(*args, **kwargs)
-        return results.filter(role=User.Role.CLIENT)
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created and instance.role == 'USER':
+        UserProfile.objects.create(user=instance)
+
+class UserProfile(models.Model):
+    Sex = (
+        ('Male', 'Male'),
+        ('Female', 'Female')
+        )
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=30)
+    birth_date = models.DateField(auto_now_add=True)
+    sex = models.CharField(max_length=50, choices=Sex)
 
 
-class Client(User):
-    base_role = User.Role.CLIENT
-
-    client = ClientManager()
-
-    class Meta:
-        proxy = True
-
-
+# ===============================================================
+# =========================  Lock  ==============================
+# ===============================================================
 class Lock(models.Model):
-    # user = 
-    lock_id = models.CharField(primary_key=True, max_length=20, unique=True)
-    lock_name = models.CharField(max_length=100)
-    lock_alias = models.CharField(max_length=100)
-    lock_mac = models.CharField(max_length=100)
-    # group = 
-    key_id = models.CharField(max_length=20, unique=True)
-    date = models.DateField(auto_now_add=True,)
+    lock_id = models.IntegerField(primary_key=True, editable=False)
+    name = models.CharField(max_length=100)
+    # location = 
+    date = models.DateTimeField(auto_now_add=True)
+
+
+class Lock_Owner(models.Model):
+    lock = models.ForeignKey(Lock, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    date = models.DateTimeField(auto_now_add=True)
     
+
+# ===============================================================
+# ========================  Group  ==============================
+# ===============================================================
+class Group(models.Model):
+    group_id = models.IntegerField(primary_key=True, editable=False)
+    name = models.CharField(max_length=100)
+    date = models.DateTimeField(auto_now_add=True)
+
+
+class Lock_Group(models.Model):
+    lock = models.ForeignKey(Lock, null=True, on_delete=models.SET_NULL)
+    group = models.ForeignKey(Group, null=True, on_delete=models.SET_NULL)
+    date = models.DateTimeField(auto_now_add=True)
+
+
+# ===============================================================
+# =========================  Ekey  ==============================
+# ===============================================================
+class Ekey(models.Model):
+    ekey_id = models.IntegerField(primary_key=True, editable=False)
+    lock = models.ForeignKey(Lock, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    name = models.CharField(max_length=100)
+    remarks = models.TextField(null=True)
+    start_date = models.DateTimeField(auto_now_add=True, null=True)
+    end_date = models.DateTimeField(null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+
+# ===============================================================
+# =======================  Passcode  ============================
+# ===============================================================
+class Passcode(models.Model):
+    PasscodeTypes = (
+        ('One-time','One-time'), 
+        ('Permanent', 'Permanent'),
+        ('Timed', 'Timed'),
+        ('Custom', 'Custom'),
+        ('Recurring', 'Recurring'),
+        ('Erase', 'Erase'),
+        )
+    passcode_id = models.IntegerField(primary_key=True, editable=False)
+    lock = models.ForeignKey(Lock, null=True, on_delete=models.SET_NULL)
+    passcode = models.TextField(max_length=15)
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=50, choices=PasscodeTypes)
+    start_date = models.DateTimeField(auto_now_add=True, null=True)
+    end_date = models.DateTimeField(null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+
+# ===============================================================
+# ========================  Record  =============================
+# ===============================================================
+class Record(models.Model):
+    Stauts = (
+        ('Lock', 0),
+        ('Unlock', 1),
+        ('Failed', 2)
+        )
+    Methods = (
+        ('App', 'App'),
+        ('Pin', 'Pin'),
+        )
+
+    record_id = models.IntegerField(primary_key=True, editable=False)
+    lock = models.ForeignKey(Lock, null=True, on_delete=models.SET_NULL)
+    status = models.CharField(max_length=50, choices=Stauts)
+    method = models.CharField(max_length=50, choices=Methods)
+    date = models.DateTimeField(auto_now_add=True)
+
+
+# ===============================================================
+# ====================  Notifications  ==========================
+# ===============================================================
+class Notification(models.Model):
+    notification_id = models.IntegerField(primary_key=True, editable=False)
+    sender = models.CharField(max_length=100)
+    receiver = models.CharField(max_length=100)
+    title = models.CharField(max_length=100)
+    content = models.CharField(max_length=1000)
+    date = models.DateTimeField(auto_now_add=True)
+
+
+# ===============================================================
+# =======================  Alarm  ===============================
+# ===============================================================
+class Alarm(models.Model):
+    AlarmTypes = (
+        ('Lock', 0),
+        ('Unlock', 1),
+        ('Warning', 2)
+        )
+    alarm_id = models.IntegerField(primary_key=True, editable=False)
+    lock = models.ForeignKey(Lock, null=True, on_delete=models.SET_NULL)
+    receiver = models.CharField(max_length=100)
+    type = models.CharField(max_length=50, choices=AlarmTypes)
+    date = models.DateTimeField(auto_now_add=True)
