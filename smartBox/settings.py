@@ -139,6 +139,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'static/media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = "/locks/list/"
+LOGIN_REDIRECT_URL = "/lock/list/"
 LOGOUT_REDIRECT_URL = "/login/"
 REGISTER_REDIRECT_URL = "/login/"

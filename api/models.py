@@ -11,7 +11,6 @@ class User(AbstractUser):
 
     base_role = Role.USER
 
-    username = models.CharField(max_length=50, unique=True, null=True) 
     last_login = None 
     first_name = None 
     last_name = None 
@@ -25,6 +24,7 @@ class User(AbstractUser):
     is_deleted = models.BooleanField(null=False, default=False)
     access_token = models.CharField(max_length=50, null=True)
     hashed_password = models.CharField(max_length=100, null=True)
+    username = models.CharField(max_length=50, unique=True, null=True) 
     ttlock_username = models.CharField(max_length=100, unique=True, null=True)
 
     USERNAME_FIELD = 'email'
