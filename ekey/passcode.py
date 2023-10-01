@@ -16,7 +16,7 @@ load_dotenv()
 clientId = os.getenv("CLIENT_ID")
 clientSecret = os.getenv('CLIENT_SECRET')
 
-def getPasscode(request, lock_id, type_id):
+def passcodeNew(request, lock_id, type_id):
     user = request.user
     normalFormatDate = time.time()
     print(normalFormatDate)
@@ -28,7 +28,6 @@ def getPasscode(request, lock_id, type_id):
     r = requests.get('https://cnapi.ttlock.com/v3/keyboardPwd/get', headers=headers, params=payload)
     if r.status_code == 200:
         responseData = r.json()
-
         newPasscode = Passcode(passcode_id=responseData["keyboardPwdId"], passcode=responseData["keyboardPwd"],
                                 type=type_id)
         newPasscode.save()
@@ -36,7 +35,7 @@ def getPasscode(request, lock_id, type_id):
     return HttpResponse(r)
 
 
-def deletePasscode(request, lock_id, passcode_id):
+def passcodeDelete(request, lock_id, passcode_id):
     user = request.user
     date = round(time.time()*1000)
 
@@ -53,7 +52,7 @@ def deletePasscode(request, lock_id, passcode_id):
     return HttpResponse(r)
 
 
-def listPasscode(request, lock_id):
+def passcodeList(request, lock_id):
     user = request.user
     date = round(time.time()*1000)
 
@@ -64,7 +63,7 @@ def listPasscode(request, lock_id):
     return HttpResponse(r)
 
 
-def updatePasscode(request,lock_id, passcode_id, passcode):
+def passcodeUpdate(request,lock_id, passcode_id, passcode):
     date = round(time.time()*1000)
     user = request.user
     payload = {'clientId':clientId, 'accessToken':user.access_token, 'lockId':lock_id, 'keyboardPwdId':passcode_id, 'newKeyboardPwd':passcode, 'date':date}
