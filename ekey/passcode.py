@@ -16,11 +16,22 @@ load_dotenv()
 clientId = os.getenv("CLIENT_ID")
 clientSecret = os.getenv('CLIENT_SECRET')
 
+
+'''
+    Request URL:
+    'lock/{lock_id}/passcode/{type_id}/new/'
+
+    Request parameters:
+    - Lock ID
+    - Type ID (1: one-time, 2: permanent)
+
+    Response:
+    - keyboardPwdId : passcode id
+    - keyboardPwd : passcode number
+'''
 def passcodeNew(request, lock_id, type_id):
     user = request.user
-    normalFormatDate = time.time()
-    print(normalFormatDate)
-    date = round(normalFormatDate*1000)
+    date = round(time.time()*1000)
 
     payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id, 'keyboardPwdType':int(type_id), 'startDate':date}
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -35,6 +46,18 @@ def passcodeNew(request, lock_id, type_id):
     return HttpResponse(r)
 
 
+'''
+    Request URL:
+    'lock/<str:lock_id>/passcode/<str:passcode_id>/delete/'
+
+    Request parameters:
+    - Lock ID
+    - Passcode ID
+
+    Response:
+    - errorcode
+    - errormessage
+'''
 def passcodeDelete(request, lock_id, passcode_id):
     user = request.user
     date = round(time.time()*1000)
@@ -52,6 +75,19 @@ def passcodeDelete(request, lock_id, passcode_id):
     return HttpResponse(r)
 
 
+'''
+    Request URL:
+    'lock/{lock_id}/passcode/list/'
+
+    Request parameters:
+    - Lock ID
+
+    Response:
+    - keyboardPwdId
+    - keyboardPwd : passcode number
+    - keyboardPwdName : pascode name
+    - sendDate : generate date
+'''
 def passcodeList(request, lock_id):
     user = request.user
     date = round(time.time()*1000)
@@ -63,6 +99,19 @@ def passcodeList(request, lock_id):
     return HttpResponse(r)
 
 
+'''
+    Request URL:
+    'lock/<str:lock_id>/passcode/<str:passcode_id>/update/<str:passcode>/'
+
+    Request parameters:
+    - Lock ID
+    - Passcode ID
+    - New Passcode
+
+    Response:
+    - errorcode
+    - errormessage
+'''
 def passcodeUpdate(request,lock_id, passcode_id, passcode):
     date = round(time.time()*1000)
     user = request.user
