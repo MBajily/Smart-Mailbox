@@ -79,12 +79,12 @@ WSGI_APPLICATION = 'smartBox.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 DATABASES["default"] = dj_database_url.parse("postgres://sahlbox_user:KFa7IXstuJMnpL1uteU28LY0MiVuhL9B@dpg-ckqn4shrfc9c739snoh0-a.singapore-postgres.render.com/sahlbox")
 
