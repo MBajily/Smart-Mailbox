@@ -95,6 +95,7 @@ def accessToken(request):
 
 def lockList(request):
     user = request.user
+    print('user2 =', user)
     date = round(time.time()*1000)
 
     payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'pageNo':1, 'pageSize':20}
