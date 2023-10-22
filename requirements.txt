@@ -6,6 +6,7 @@ crispy-bootstrap4==2022.1
 Django==4.2.1
 django-crispy-forms==2.0
 exceptiongroup==1.1.1
+gunicorn==21.2.0
 idna==3.4
 iniconfig==2.0.0
 packaging==23.1
