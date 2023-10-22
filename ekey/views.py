@@ -60,7 +60,7 @@ def loginUser(request):
         password = request.POST.get('password')
 
         user = authenticate(request, email=email, password=password)
-
+        print('user=', user)
         if user is not None:
             login(request, user)
             accessToken(request) # Done
