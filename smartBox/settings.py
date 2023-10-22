@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-pneumy&(ne6iqfeamfx5vy7e8ya3@(dby0&u&j8^4p-_pux(0o'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["sahlbox.onrender.com", "127.0.0.1"]
 
