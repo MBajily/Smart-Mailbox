@@ -61,8 +61,9 @@ def loginUser(request):
 
         user = authenticate(request, email=email, password=password)
         print('user=', user)
-        if user is not None:
+        if (user is not None) and (user != 'AnonymousUser'):
             login(request, user)
+            print('request.user=', request.user)
             accessToken(request) # Done
             return redirect('lockList')
         else:
