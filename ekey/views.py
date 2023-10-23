@@ -11,7 +11,8 @@ from api.models import *
 from .forms import *
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-
+from django.contrib.sessions.backends.db import SessionStore
+from django.conf import settings
 
 load_dotenv()
 
@@ -26,7 +27,7 @@ def get_session_id(request):
     session_id = request.COOKIES.get(session_cookie_name)
     return session_id
 
-    
+
 def register(request):
     if request.method == 'POST':
         formset = RegisterForm(request.POST)
@@ -136,3 +137,5 @@ def lockDelete(request, lock_id):
     r = requests.get('https://cnapi.ttlock.com/v3/lock/delete', headers=headers, params=payload)
     return HttpResponse(r)
 
+
+SESSION_COOKIE_DOMAIN = "sahlbox.onrender.com"
