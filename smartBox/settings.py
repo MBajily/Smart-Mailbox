@@ -166,5 +166,5 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    '*'
+    "https://sahlbox.onrender.com",
 ]
