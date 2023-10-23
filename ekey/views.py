@@ -20,6 +20,13 @@ clientSecret = os.getenv('CLIENT_SECRET')
 
 ttlock = TTLock(clientId, clientSecret)
 
+
+def get_session_id(request):
+    session_cookie_name = settings.SESSION_COOKIE_NAME
+    session_id = request.COOKIES.get(session_cookie_name)
+    return session_id
+
+    
 def register(request):
     if request.method == 'POST':
         formset = RegisterForm(request.POST)
@@ -61,8 +68,11 @@ def loginUser(request):
 
         user = authenticate(request, email=email, password=password)
         print('user=', user)
-        if (user is not None) and (user != 'AnonymousUser'):
+        if user is not None:
             login(request, user)
+            # Save the session to get the session ID
+            request.session.save()
+            session_id = request.session.session_key
             print('request.user=', request.user)
             accessToken(request) # Done
             return redirect('lockList')
