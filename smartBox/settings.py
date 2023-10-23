@@ -158,9 +158,9 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
 
 SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = True
 
-
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Allow requests with credentials (cookies)
 CORS_ALLOW_CREDENTIALS = True
