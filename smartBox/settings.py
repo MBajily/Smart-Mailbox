@@ -156,7 +156,7 @@ CSRF_COOKIE_DOMAIN = 'sahlbox.onrender.com'
 SESSION_COOKIE_AGE = 315360000
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-
+SESSION_COOKIE_DOMAIN = "sahlbox.onrender.com"
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
 
