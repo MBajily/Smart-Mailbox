@@ -13,7 +13,6 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.sessions.backends.db import SessionStore
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
 
 load_dotenv()
 
@@ -40,7 +39,7 @@ def getUser(request):
     return user
 
 
-@csrf_exempt
+
 def register(request):
     if request.method == 'POST':
         formset = RegisterForm(request.POST)
@@ -73,7 +72,7 @@ def register(request):
     return render(request, "ekey/registration.html", context)
 
 
-@csrf_exempt
+
 def loginUser(request):
     form = LoginForm()
     if request.method == 'POST':
@@ -149,3 +148,5 @@ def lockDelete(request, lock_id):
 
     r = requests.get('https://cnapi.ttlock.com/v3/lock/delete', headers=headers, params=payload)
     return HttpResponse(r)
+
+
