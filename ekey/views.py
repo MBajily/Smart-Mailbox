@@ -19,7 +19,7 @@ clientSecret = os.getenv('CLIENT_SECRET')
 
 ttlock = TTLock(clientId, clientSecret)
 
-User = None
+user = None
 
 def register(request):
     if request.method == 'POST':
