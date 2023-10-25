@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'api',
     'ekey',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -149,46 +148,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = "/lock/list/"
 LOGOUT_REDIRECT_URL = "/login/"
 REGISTER_REDIRECT_URL = "/login/"
-
-
-CSRF_COOKIE_DOMAIN = 'sahlbox.onrender.com'
-
-SESSION_COOKIE_AGE = 315360000
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
-SESSION_COOKIE_DOMAIN = "sahlbox.onrender.com"
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_SAVE_EVERY_REQUEST = True
-
-SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_HTTPONLY = True
-
-SESSION_COOKIE_SAMESITE = 'Lax'
-
-# Allow requests with credentials (cookies)
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOWED_ORIGINS = [
-    "https://sahlbox.onrender.com",
-]
-
-CORS_ALLOW_METHODS = (
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-)
-
-CORS_ALLOW_HEADERS = (
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-)

@@ -11,8 +11,6 @@ from api.models import *
 from .forms import *
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.sessions.backends.db import SessionStore
-from django.conf import settings
 
 load_dotenv()
 
@@ -20,24 +18,6 @@ clientId = os.getenv("CLIENT_ID")
 clientSecret = os.getenv('CLIENT_SECRET')
 
 ttlock = TTLock(clientId, clientSecret)
-
-
-def get_session_id(request):
-    session_cookie_name = settings.SESSION_COOKIE_NAME
-    session_id = request.COOKIES.get(session_cookie_name)
-    return session_id
-
-def getUser(request):
-    from django.contrib.auth.models import AnonymousUser
-    try:
-        user_id = request.session.session_key
-        backend_path = request.session.backend_session_key
-        backend = load_backend(backend_path)
-        user = backend.get_user(user_id) or AnonymousUser()
-    except KeyError:
-        user = AnonymousUser()
-    return user
-
 
 
 def register(request):
@@ -72,7 +52,6 @@ def register(request):
     return render(request, "ekey/registration.html", context)
 
 
-
 def loginUser(request):
     form = LoginForm()
     if request.method == 'POST':
@@ -85,7 +64,6 @@ def loginUser(request):
             login(request, user)
             # Save the session to get the session ID
             request.session.save()
-            session_id = request.session.session_key
             print('request.user=', request.user)
             accessToken(request) # Done
             return redirect('lockList')
@@ -104,7 +82,7 @@ def logoutUser(request):
 
 # Done
 def accessToken(request):
-    user = getUser(request)
+    # user = getUser(request)
     access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=user.ttlock_username, password=user.hashed_password, redirect_uri='')
     access_token = access_token["access_token"]
     if (user.access_token is None) or (user.access_token == '') or (user.access_token != access_token):
@@ -118,7 +96,7 @@ def accessToken(request):
 
 
 def lockList(request):
-    user = getUser(request)
+    # user = getUser(request)
     print('user2 =', user)
     date = round(time.time()*1000)
 
@@ -129,7 +107,7 @@ def lockList(request):
 
 
 def lockDetails(request, lock_id):
-    user = getUser(request)
+    # user = getUser(request)
     date = round(time.time()*1000)
 
     payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
@@ -140,7 +118,7 @@ def lockDetails(request, lock_id):
 
 
 def lockDelete(request, lock_id):
-    user = getUser(request)
+    # user = getUser(request)
     date = round(time.time()*1000)
 
     payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
