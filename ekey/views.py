@@ -77,6 +77,7 @@ def loginUser(request):
 
 def logoutUser(request):
     logout(request)
+    user = None
     return redirect('login')
 
 
