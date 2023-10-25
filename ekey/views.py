@@ -19,7 +19,6 @@ clientSecret = os.getenv('CLIENT_SECRET')
 
 ttlock = TTLock(clientId, clientSecret)
 
-user = None
 
 def register(request):
     if request.method == 'POST':
@@ -64,6 +63,10 @@ def loginUser(request):
         if user is not None:
             login(request, user)
             # Save the session to get the session ID
+            request.session['email'] = email
+            request.user = user
+            print("request.session['email']=", request.session['email'])
+            print("request.session=", request.session)
             request.session.save()
             print('request.user=', request.user)
             accessToken(request) # Done
@@ -78,13 +81,12 @@ def loginUser(request):
 
 def logoutUser(request):
     logout(request)
-    user = None
     return redirect('login')
 
 
 # Done
 def accessToken(request):
-    # user = getUser(request)
+    user = request.user
     access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=user.ttlock_username, password=user.hashed_password, redirect_uri='')
     access_token = access_token["access_token"]
     if (user.access_token is None) or (user.access_token == '') or (user.access_token != access_token):
@@ -98,7 +100,7 @@ def accessToken(request):
 
 
 def lockList(request):
-    # user = getUser(request)
+    user = request.user
     print('user2 =', user)
     date = round(time.time()*1000)
 
@@ -109,7 +111,7 @@ def lockList(request):
 
 
 def lockDetails(request, lock_id):
-    # user = getUser(request)
+    user = request.user
     date = round(time.time()*1000)
 
     payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
@@ -120,7 +122,7 @@ def lockDetails(request, lock_id):
 
 
 def lockDelete(request, lock_id):
-    # user = getUser(request)
+    user = request.user
     date = round(time.time()*1000)
 
     payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
