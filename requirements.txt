@@ -4,8 +4,8 @@ charset-normalizer==3.1.0
 colorama==0.4.6
 crispy-bootstrap4==2022.1
 dj-database-url==2.1.0
-Django==3.2.22
-django-cors-headers==4.1.0
+Django==4.2.1
+django-cors-headers==4.3.0
 django-crispy-forms==2.0
 exceptiongroup==1.1.1
 gunicorn==21.2.0
@@ -17,13 +17,13 @@ pluggy==1.0.0
 psycopg2-binary==2.9.9
 pytest==7.3.1
 pytest-mock==3.10.0
-python-dotenv==0.21.1
+python-dotenv==1.0.0
 requests==2.30.0
 requests-mock==1.10.0
 six==1.16.0
 sqlparse==0.4.4
 tomli==2.0.1
 ttlockio==0.3.4
-typing_extensions==4.7.1
+typing_extensions==4.8.0
 tzdata==2023.3
 urllib3==2.0.2
