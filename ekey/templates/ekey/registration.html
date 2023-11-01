@@ -20,7 +20,28 @@
                     <form method="POST">
                       <div class="row">
                         {% csrf_token %}
-                        {{formset|crispy}}
+                        <!-- {{formset|crispy}} -->
+                        <div class="col-12">
+                          <input type="text" placeholder="email" name="email" />
+                        </div>
+                        <div class="col-12">
+                          <input type="text" placeholder="username" name="username" />
+                        </div>
+                        <div class="col-12">
+                          <input type="text" placeholder="password" name="password" />
+                        </div>
+                        <div class="col-12">
+                          <input type="text" placeholder="Full Name" name="full_name" />
+                        </div>
+                        <div class="col-12">
+                          <input type="text" placeholder="gender" name="gender" />
+                        </div>
+                        <div class="col-12">
+                          <input type="text" placeholder="phone" name="phone" />
+                        </div>
+                        <div class="col-12">
+                          <input type="text" placeholder="birth_date" name="birth_date" />
+                        </div>
                         <div class="col-12">
                           <div class="form-group">
                             <button class="btn-theme">Register Now</button>

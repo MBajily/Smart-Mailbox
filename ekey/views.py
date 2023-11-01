@@ -20,29 +20,71 @@ clientSecret = os.getenv('CLIENT_SECRET')
 ttlock = TTLock(clientId, clientSecret)
 
 
+'''
+    Request URL:
+    https://api.sahlbox.com/register/
+
+    Request parameters:
+    - username
+    - email
+    - full_name
+    - phone
+    - gender (1- Mail, 2- Femail, 3- Prefer not to say)
+    - birth_date
+    - password
+
+    Response:
+    - No need
+'''
 def register(request):
     if request.method == 'POST':
-        formset = RegisterForm(request.POST)
-        if formset.is_valid():
-            formset.save()
-            email = request.POST['email']
-            username = request.POST['username']
-            password = request.POST['password1']
-            hashed_password = hashlib.md5(password.encode()).hexdigest()
-            selected_client = User.objects.filter(email=email)
-            try:
-                new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=hashed_password)
-                access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=new_user['username'], password=hashed_password, redirect_uri='')
-                print(new_user)
-                selected_client.update(ttlock_username = new_user['username'], hashed_password=hashed_password,
-                                        access_token=access_token['access_token'])
-                return redirect('login') #done
-                
-            except:
-                selected_client.delete()
-                return redirect('register')
+        # formset = RegisterForm(request.POST)
+        try:
+            formset = User.objects.create(email = request.POST['email'],
+                username = request.POST['username'],
+                password = request.POST['password'])
+            if formset:
+                formset.save()
+                email = request.POST['email']
+                username = request.POST['username']
+                password = request.POST['password']
+                hashed_password = hashlib.md5(password.encode()).hexdigest()
+                selected_client = User.objects.filter(email=email)
+                try:
+                    new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=hashed_password)
+                    access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=new_user['username'], password=hashed_password, redirect_uri='')
+                    # print(selected_client)
+                    selected_client.update(ttlock_username=new_user['username'], hashed_password=hashed_password,
+                                            access_token=access_token['access_token'])
+                    # print(selected_client)
+                    selectedProfile = UserProfile.objects.filter(user__in=selected_client).first()
+                    selectedProfile.full_name = request.POST['full_name']
+                    selectedProfile.phone = request.POST['phone']
+                    selectedProfile.birth_date = request.POST['birth_date']
+                    selectedProfile.gender = request.POST['gender']
+                    # print(selectedProfile)
+                    if selectedProfile:
+                        selectedProfile.save()
+                        return redirect('login') #done
+                    
+                except Exception as e:
+                    date = round(time.time()*1000)
+                    print(new_user['username'])
+                    payload = {'clientId':clientId, 'clientSecret':clientSecret, 'date':date, 'username':new_user['username']}
+                    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+                    requests.post('https://euapi.ttlock.com/v3/user/delete', headers=headers, params=payload)
+                    selected_client.delete()
+                    print(e)
+                    return redirect('register')
 
+                finally:
+                    return redirect('register')
+
+        except Exception as e:
+            print(e)
             return redirect('register')
+                
+        return redirect('register')
             
     else:
         formset = RegisterForm()
@@ -52,6 +94,17 @@ def register(request):
     return render(request, "ekey/registration.html", context)
 
 
+'''
+    Request URL:
+    https://api.sahlbox.com/login/
+
+    Request parameters:
+    - email
+    - password
+
+    Response:
+    - No need
+'''
 def loginUser(request):
     form = LoginForm()
     if request.method == 'POST':

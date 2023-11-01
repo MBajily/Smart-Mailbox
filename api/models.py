@@ -41,22 +41,22 @@ class User(AbstractUser):
 # ===============================================================
 # =====================  User Profile  ==========================
 # ===============================================================
-
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created and instance.role == 'USER':
         UserProfile.objects.create(user=instance)
 
 class UserProfile(models.Model):
-    Sex = (
-        ('Male', 'Male'),
-        ('Female', 'Female')
+    Gender = (
+        (1, 'Male'),
+        (2, 'Female'),
+        (3, 'Prefer not to say')
         )
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length= 100)
-    phone = models.CharField(max_length=30)
-    birth_date = models.DateField(auto_now_add=True)
-    sex = models.CharField(max_length=50, choices=Sex)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, name="user")
+    full_name = models.CharField(max_length= 100, null=True)
+    phone = models.CharField(max_length=30, null=True)
+    birth_date = models.DateField(auto_now_add=True, null=True)
+    gender = models.IntegerField(choices=Gender, null=True)
 
 
 # ===============================================================
@@ -65,7 +65,6 @@ class UserProfile(models.Model):
 class Lock(models.Model):
     lock_id = models.IntegerField(primary_key=True, editable=False)
     name = models.CharField(max_length=100)
-    # location = 
     date = models.DateTimeField(auto_now_add=True)
 
 
