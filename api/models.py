@@ -55,7 +55,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, name="user")
     full_name = models.CharField(max_length= 100, null=True)
     phone = models.CharField(max_length=30, null=True)
-    birth_date = models.DateField(auto_now_add=True, null=True)
+    birth_date = models.DateField(null=True)
     gender = models.IntegerField(choices=Gender, null=True)
 
 

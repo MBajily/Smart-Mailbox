@@ -24,6 +24,8 @@ ttlock = TTLock(clientId, clientSecret)
     Request URL:
     https://api.sahlbox.com/register/
 
+    Request Method: POST
+
     Request parameters:
     - username
     - email
@@ -34,7 +36,9 @@ ttlock = TTLock(clientId, clientSecret)
     - password
 
     Response:
-    - No need
+    - 200 OK -> Redirect to login page.
+    - 400 Bad Request -> Should redirect to register page and tell the user: “invalid registration details”.
+
 '''
 def register(request):
     if request.method == 'POST':
@@ -65,7 +69,8 @@ def register(request):
                     # print(selectedProfile)
                     if selectedProfile:
                         selectedProfile.save()
-                        return redirect('login') #done
+                        # return redirect('login') #done
+                        return HttpResponse(status=200)
                     
                 except Exception as e:
                     date = round(time.time()*1000)
@@ -74,17 +79,22 @@ def register(request):
                     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
                     requests.post('https://euapi.ttlock.com/v3/user/delete', headers=headers, params=payload)
                     selected_client.delete()
-                    print(e)
-                    return redirect('register')
+                    # print(e)
+                    # return redirect('register')
+                    return HttpResponse(status=400)
+
 
                 finally:
-                    return redirect('register')
+                    # return redirect('register')
+                    return HttpResponse(status=400)
 
         except Exception as e:
             print(e)
-            return redirect('register')
+            # return redirect('register')
+            return HttpResponse(status=400)
                 
-        return redirect('register')
+        # return redirect('register')
+        return HttpResponse(status=400)
             
     else:
         formset = RegisterForm()
@@ -98,34 +108,31 @@ def register(request):
     Request URL:
     https://api.sahlbox.com/login/
 
+    Request Method: POST
+
     Request parameters:
     - email
     - password
 
     Response:
-    - No need
+    - 200 OK -> Redirect to home page.
+    - 400 Bad Request -> Should redirect to login page and tell the user “The email or password is wrong”.
+
 '''
 def loginUser(request):
     form = LoginForm()
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-
         user = authenticate(request, email=email, password=password)
-        print('user=', user)
         if user is not None:
             login(request, user)
-            # Save the session to get the session ID
-            request.session['email'] = email
-            request.user = user
-            print("request.session['email']=", request.session['email'])
-            print("request.session=", request.session)
-            request.session.save()
-            print('request.user=', request.user)
             accessToken(request) # Done
-            return redirect('lockList')
+            # return redirect('lockList')
+            return HttpResponse(status=200)
         else:
-            return redirect('login')
+            # return redirect('login')
+            return HttpResponse(status=400)
 
     context = {'title':'Login', 'form':form}
     return render(request, "registration/login.html", context)
@@ -134,7 +141,8 @@ def loginUser(request):
 
 def logoutUser(request):
     logout(request)
-    return redirect('login')
+    # return redirect('login')
+    return HttpResponse(status=200)
 
 
 # Done
@@ -152,17 +160,50 @@ def accessToken(request):
     return HttpResponse(user.access_token)
 
 
+'''
+    Request URL:
+    https://api.sahlbox.com/lock/list/
+
+    Request Method: GET
+
+    Request parameters:
+    - No require
+
+    Response:
+    - list (JSONArray):
+        - lockId
+        - lockName
+    - pageNo
+    - pageSize
+    - pages
+    - total
+'''
 def lockList(request):
     user = request.user
-    print('user2 =', user)
     date = round(time.time()*1000)
 
-    payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'pageNo':1, 'pageSize':20}
+    payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'pageNo':1, 'pageSize':100}
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     r = requests.get('https://cnapi.ttlock.com/v3/lock/list', headers=headers, params=payload)
     return HttpResponse(r)
 
 
+
+'''
+    Request URL:
+    https://api.sahlbox.com/lock/<str:lock_id>/details/
+
+    Request Method: GET
+
+    Request parameters:
+    - lock_id
+
+    Response:
+    - lockId
+    - lockName
+    - lockMac
+    - lockSound (0-unknow, 1-on, 2-off)
+'''
 def lockDetails(request, lock_id):
     user = request.user
     date = round(time.time()*1000)
