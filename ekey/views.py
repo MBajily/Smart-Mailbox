@@ -117,7 +117,6 @@ def register(request):
     Response:
     - 200 OK -> Redirect to home page.
     - 400 Bad Request -> Should redirect to login page and tell the user “The email or password is wrong”.
-
 '''
 def loginUser(request):
     form = LoginForm()
@@ -138,11 +137,26 @@ def loginUser(request):
     return render(request, "registration/login.html", context)
 
 
+'''
+    Request URL:
+    https://api.sahlbox.com/logout/
 
+    Request Method: GET
+
+    Request parameters:
+    - Not require
+
+    Response:
+    - 200 OK -> Redirect to login page.
+    - 400 Bad Request -> Stay in same page.
+'''
 def logoutUser(request):
-    logout(request)
-    # return redirect('login')
-    return HttpResponse(status=200)
+    try:
+        logout(request)
+        # return redirect('login')
+        return HttpResponse(status=200)
+    except:
+        return HttpResponse(status=400)
 
 
 # Done
@@ -170,22 +184,29 @@ def accessToken(request):
     - No require
 
     Response:
-    - list (JSONArray):
-        - lockId
-        - lockName
-    - pageNo
-    - pageSize
-    - pages
-    - total
+    - 200 OK
+        Parameter:
+        - list (JSONArray):
+            - lockId
+            - lockName
+        - pageNo
+        - pageSize
+        - pages
+        - total
+    - 400 Bad Request -> Redirect to login page
 '''
 def lockList(request):
-    user = request.user
-    date = round(time.time()*1000)
+    try:
+        user = request.user
+        date = round(time.time()*1000)
 
-    payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'pageNo':1, 'pageSize':100}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    r = requests.get('https://cnapi.ttlock.com/v3/lock/list', headers=headers, params=payload)
-    return HttpResponse(r)
+        payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'pageNo':1, 'pageSize':100}
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        r = requests.get('https://cnapi.ttlock.com/v3/lock/list', headers=headers, params=payload)
+        return HttpResponse(r)
+    except:
+        redirect('logout')
+        return HttpResponse(status=400)
 
 
 
@@ -199,30 +220,58 @@ def lockList(request):
     - lock_id
 
     Response:
-    - lockId
-    - lockName
-    - lockMac
-    - lockSound (0-unknow, 1-on, 2-off)
+    - 200 OK
+        Parameter:
+        - lockId
+        - lockName
+        - lockMac
+        - lockSound (0-unknow, 1-on, 2-off)
+    
+    or
+    - 400 Bad Request -> Stay in same page
 '''
 def lockDetails(request, lock_id):
-    user = request.user
-    date = round(time.time()*1000)
+    try:
+        user = request.user
+        date = round(time.time()*1000)
 
-    payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
-    r = requests.get('https://cnapi.ttlock.com/v3/lock/detail', headers=headers, params=payload)
-    return HttpResponse(r)
+        r = requests.get('https://cnapi.ttlock.com/v3/lock/detail', headers=headers, params=payload)
+        return HttpResponse(r)
+    except:
+        return HttpResponse(status=400)
 
 
+'''
+    Request URL:
+    https://api.sahlbox.com/lock/<str:lock_id>/details/
+
+    Request Method: POST
+
+    Request parameters:
+    - lock_id
+
+    Response:
+    - 200 OK.
+    - 400 Bad Request.
+'''
 def lockDelete(request, lock_id):
-    user = request.user
-    date = round(time.time()*1000)
+    if request.method == 'POST':
+        try:
+            user = request.user
+            date = round(time.time()*1000)
 
-    payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
-    r = requests.get('https://cnapi.ttlock.com/v3/lock/delete', headers=headers, params=payload)
-    return HttpResponse(r)
+            r = requests.get('https://cnapi.ttlock.com/v3/lock/delete', headers=headers, params=payload)
+            return HttpResponse(status=200)
+        
+        except:
+            return HttpResponse(status=400)
+
+    return HttpResponse(status=400)
 
 
