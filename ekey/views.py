@@ -17,6 +17,12 @@ load_dotenv()
 clientId = os.getenv("CLIENT_ID")
 clientSecret = os.getenv('CLIENT_SECRET')
 
+# with open('/etc/config.json') as config_file:
+#     config = json.load(config_file)
+
+# clientId = config["CLIENT_ID"]
+# clientSecret = config["CLIENT_SECRET"]
+
 ttlock = TTLock(clientId, clientSecret)
 
 
@@ -38,7 +44,6 @@ ttlock = TTLock(clientId, clientSecret)
     Response:
     - 200 OK -> Redirect to login page.
     - 400 Bad Request -> Should redirect to register page and tell the user: “invalid registration details”.
-
 '''
 def register(request):
     if request.method == 'POST':
@@ -54,8 +59,8 @@ def register(request):
                 password = request.POST['password']
                 hashed_password = hashlib.md5(password.encode()).hexdigest()
                 selected_client = User.objects.filter(email=email)
+                new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=hashed_password)
                 try:
-                    new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=hashed_password)
                     access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=new_user['username'], password=hashed_password, redirect_uri='')
                     # print(selected_client)
                     selected_client.update(ttlock_username=new_user['username'], hashed_password=hashed_password,
@@ -69,32 +74,33 @@ def register(request):
                     # print(selectedProfile)
                     if selectedProfile:
                         selectedProfile.save()
-                        # return redirect('login') #done
-                        return HttpResponse(status=200)
+                        result = {}
+                        result["USER_TOKEN"] = access_token['access_token']
+                        return HttpResponse(json.dumps(result), status=200)
                     
                 except Exception as e:
                     date = round(time.time()*1000)
-                    print(new_user['username'])
+                    # print(new_user['username'])
                     payload = {'clientId':clientId, 'clientSecret':clientSecret, 'date':date, 'username':new_user['username']}
                     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
                     requests.post('https://euapi.ttlock.com/v3/user/delete', headers=headers, params=payload)
                     selected_client.delete()
                     # print(e)
                     # return redirect('register')
-                    return HttpResponse(status=400)
-
+                    return HttpResponse(e)
 
                 finally:
-                    # return redirect('register')
                     return HttpResponse(status=400)
+
 
         except Exception as e:
             print(e)
             # return redirect('register')
-            return HttpResponse(status=400)
+            return HttpResponse(e)
                 
         # return redirect('register')
-        return HttpResponse(status=400)
+        finally:
+            return HttpResponse(status=400)
             
     else:
         formset = RegisterForm()
@@ -126,9 +132,12 @@ def loginUser(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-            accessToken(request) # Done
+            access_token = accessToken(request) # Done
             # return redirect('lockList')
-            return HttpResponse(status=200)
+            # return HttpResponse(status=200)
+            result = {}
+            result["USER_TOKEN"] = access_token
+            return HttpResponse(json.dumps(result), status=200)
         else:
             # return redirect('login')
             return HttpResponse(status=400)
@@ -171,107 +180,5 @@ def accessToken(request):
         selectedUser = User.objects.filter(email=user.email)
         selectedUser.update(access_token=access_token)
     
-    return HttpResponse(user.access_token)
-
-
-'''
-    Request URL:
-    https://api.sahlbox.com/lock/list/
-
-    Request Method: GET
-
-    Request parameters:
-    - No require
-
-    Response:
-    - 200 OK
-        Parameter:
-        - list (JSONArray):
-            - lockId
-            - lockName
-        - pageNo
-        - pageSize
-        - pages
-        - total
-    - 400 Bad Request -> Redirect to login page
-'''
-def lockList(request):
-    try:
-        user = request.user
-        date = round(time.time()*1000)
-
-        payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'pageNo':1, 'pageSize':100}
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        r = requests.get('https://cnapi.ttlock.com/v3/lock/list', headers=headers, params=payload)
-        return HttpResponse(r)
-    except:
-        redirect('logout')
-        return HttpResponse(status=400)
-
-
-
-'''
-    Request URL:
-    https://api.sahlbox.com/lock/<str:lock_id>/details/
-
-    Request Method: GET
-
-    Request parameters:
-    - lock_id
-
-    Response:
-    - 200 OK
-        Parameter:
-        - lockId
-        - lockName
-        - lockMac
-        - lockSound (0-unknow, 1-on, 2-off)
-    
-    or
-    - 400 Bad Request -> Stay in same page
-'''
-def lockDetails(request, lock_id):
-    try:
-        user = request.user
-        date = round(time.time()*1000)
-
-        payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-        r = requests.get('https://cnapi.ttlock.com/v3/lock/detail', headers=headers, params=payload)
-        return HttpResponse(r)
-    except:
-        return HttpResponse(status=400)
-
-
-'''
-    Request URL:
-    https://api.sahlbox.com/lock/<str:lock_id>/details/
-
-    Request Method: POST
-
-    Request parameters:
-    - lock_id
-
-    Response:
-    - 200 OK.
-    - 400 Bad Request.
-'''
-def lockDelete(request, lock_id):
-    if request.method == 'POST':
-        try:
-            user = request.user
-            date = round(time.time()*1000)
-
-            payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id}
-            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-            r = requests.get('https://cnapi.ttlock.com/v3/lock/delete', headers=headers, params=payload)
-            return HttpResponse(status=200)
-        
-        except:
-            return HttpResponse(status=400)
-
-    return HttpResponse(status=400)
-
+    return user.access_token
 
