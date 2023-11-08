@@ -12,16 +12,16 @@ from .forms import *
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-# load_dotenv()
+load_dotenv()
 
-# clientId = os.getenv("CLIENT_ID")
-# clientSecret = os.getenv('CLIENT_SECRET')
+clientId = os.getenv("CLIENT_ID")
+clientSecret = os.getenv('CLIENT_SECRET')
 
-with open('/etc/config.json') as config_file:
-    config = json.load(config_file)
+# with open('/etc/config.json') as config_file:
+#     config = json.load(config_file)
 
-clientId = config["CLIENT_ID"]
-clientSecret = config["CLIENT_SECRET"]
+# clientId = config["CLIENT_ID"]
+# clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 

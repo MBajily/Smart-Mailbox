@@ -14,16 +14,16 @@ from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 from passlib.hash import django_pbkdf2_sha256 as handler
 
-# load_dotenv()
+load_dotenv()
 
-# clientId = os.getenv("CLIENT_ID")
-# clientSecret = os.getenv('CLIENT_SECRET')
+clientId = os.getenv("CLIENT_ID")
+clientSecret = os.getenv('CLIENT_SECRET')
 
-with open('/etc/config.json') as config_file:
-    config = json.load(config_file)
+# with open('/etc/config.json') as config_file:
+#     config = json.load(config_file)
 
-clientId = config["CLIENT_ID"]
-clientSecret = config["CLIENT_SECRET"]
+# clientId = config["CLIENT_ID"]
+# clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -94,16 +94,18 @@ def register(request):
                     selected_client.delete()
                     # print(e)
                     # return redirect('register')
-                    return HttpResponse(e)
+                    # return HttpResponse(e)
+                    return HttpResponse(status=400)
 
                 # finally:
                 #     return HttpResponse(status=400)
 
 
         except Exception as e:
-            print(e)
+            # print(e)
             # return redirect('register')
-            return HttpResponse(e)
+            # return HttpResponse(e)
+            return HttpResponse(status=400)
                 
         # return redirect('register')
         # finally:
