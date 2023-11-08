@@ -10,17 +10,18 @@ from dotenv import load_dotenv
 from api.models import *
 from .forms import *
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
-load_dotenv()
+# load_dotenv()
 
-clientId = os.getenv("CLIENT_ID")
-clientSecret = os.getenv('CLIENT_SECRET')
+# clientId = os.getenv("CLIENT_ID")
+# clientSecret = os.getenv('CLIENT_SECRET')
 
-# with open('/etc/config.json') as config_file:
-#     config = json.load(config_file)
+with open('/etc/config.json') as config_file:
+    config = json.load(config_file)
 
-# clientId = config["CLIENT_ID"]
-# clientSecret = config["CLIENT_SECRET"]
+clientId = config["CLIENT_ID"]
+clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -46,8 +47,10 @@ ttlock = TTLock(clientId, clientSecret)
         - total
     - 400 Bad Request -> Redirect to login page
 '''
+@csrf_exempt
 def lockList(request):
-    auth_token = request.META.get('HTTP_AUTH_TOKEN')
+    auth_token = request.META.get('HTTP_USER_TOKEN')
+    
     if auth_token is None:
         return HttpResponse(status=401)
     try:
@@ -83,8 +86,9 @@ def lockList(request):
     or
     - 400 Bad Request -> Stay in same page
 '''
+@csrf_exempt
 def lockDetails(request):
-    auth_token = request.META.get('HTTP_AUTH_TOKEN')
+    auth_token = request.META.get('HTTP_USER_TOKEN')
     if auth_token is None:
         return HttpResponse(status=401)
     try:
@@ -114,9 +118,10 @@ def lockDetails(request):
     - 200 OK.
     - 400 Bad Request.
 '''
+@csrf_exempt
 def lockDelete(request):
     if request.method == 'POST':
-        auth_token = request.META.get('HTTP_AUTH_TOKEN')
+        auth_token = request.META.get('HTTP_USER_TOKEN')
         if auth_token is None:
             return HttpResponse(status=401)
         try:
@@ -150,17 +155,18 @@ def lockDelete(request):
     - 200 OK.
     - 400 Bad Request.
 '''
+@csrf_exempt
 def lockNameUpdate(request):
     date = round(time.time()*1000)
     user = request.user
 
     if request.method == 'POST':
-        auth_token = request.META.get('HTTP_AUTH_TOKEN')
+        auth_token = request.META.get('HTTP_USER_TOKEN')
         if auth_token is None:
             return HttpResponse(status=401)
         try:
-            lockId = request.POST["lockId"]
-            lockAlias = request.POST["lockAlias"]
+            lockId = request.GET.get('lockId')
+            lockAlias = request.GET.get("lockAlias")
             payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'lockAlias':lockAlias, 'date':date}
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             r = requests.post('https://cnapi.ttlock.com/v3/lock/rename', headers=headers, params=payload)

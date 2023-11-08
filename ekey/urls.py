@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views, passcode, lock
+from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
 	path('register/', views.register, name="register"),

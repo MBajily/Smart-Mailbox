@@ -11,17 +11,19 @@ from api.models import *
 from .forms import *
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.csrf import csrf_exempt
+from passlib.hash import django_pbkdf2_sha256 as handler
 
-load_dotenv()
+# load_dotenv()
 
-clientId = os.getenv("CLIENT_ID")
-clientSecret = os.getenv('CLIENT_SECRET')
+# clientId = os.getenv("CLIENT_ID")
+# clientSecret = os.getenv('CLIENT_SECRET')
 
-# with open('/etc/config.json') as config_file:
-#     config = json.load(config_file)
+with open('/etc/config.json') as config_file:
+    config = json.load(config_file)
 
-# clientId = config["CLIENT_ID"]
-# clientSecret = config["CLIENT_SECRET"]
+clientId = config["CLIENT_ID"]
+clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -45,18 +47,19 @@ ttlock = TTLock(clientId, clientSecret)
     - 200 OK -> Redirect to login page.
     - 400 Bad Request -> Should redirect to register page and tell the user: “invalid registration details”.
 '''
+@csrf_exempt
 def register(request):
     if request.method == 'POST':
         # formset = RegisterForm(request.POST)
         try:
-            formset = User.objects.create(email = request.POST['email'],
-                username = request.POST['username'],
-                password = request.POST['password'])
+            formset = User.objects.create(email = request.GET.get('email'),
+                username = request.GET.get('username'),
+                password = handler.hash(request.GET.get('password')))
             if formset:
                 formset.save()
-                email = request.POST['email']
-                username = request.POST['username']
-                password = request.POST['password']
+                email = request.GET.get('email')
+                username = request.GET.get('username')
+                password = request.GET.get('password')
                 hashed_password = hashlib.md5(password.encode()).hexdigest()
                 selected_client = User.objects.filter(email=email)
                 new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=hashed_password)
@@ -67,16 +70,20 @@ def register(request):
                                             access_token=access_token['access_token'])
                     # print(selected_client)
                     selectedProfile = UserProfile.objects.filter(user__in=selected_client).first()
-                    selectedProfile.full_name = request.POST['full_name']
-                    selectedProfile.phone = request.POST['phone']
-                    selectedProfile.birth_date = request.POST['birth_date']
-                    selectedProfile.gender = request.POST['gender']
+                    selectedProfile.full_name = request.GET.get('full_name')
+                    selectedProfile.phone = request.GET.get('phone')
+                    selectedProfile.birth_date = request.GET.get('birth_date')
+                    selectedProfile.gender = request.GET.get('gender')
                     # print(selectedProfile)
                     if selectedProfile:
+                        print('here1')
                         selectedProfile.save()
+                        print('here2')
                         result = {}
+                        print('here3')
                         result["USER_TOKEN"] = access_token['access_token']
-                        return HttpResponse(json.dumps(result), status=200)
+                        print('here4')
+                        return HttpResponse(json.dumps(result))
                     
                 except Exception as e:
                     date = round(time.time()*1000)
@@ -89,8 +96,8 @@ def register(request):
                     # return redirect('register')
                     return HttpResponse(e)
 
-                finally:
-                    return HttpResponse(status=400)
+                # finally:
+                #     return HttpResponse(status=400)
 
 
         except Exception as e:
@@ -99,8 +106,8 @@ def register(request):
             return HttpResponse(e)
                 
         # return redirect('register')
-        finally:
-            return HttpResponse(status=400)
+        # finally:
+        #     return HttpResponse(status=400)
             
     else:
         formset = RegisterForm()
@@ -124,11 +131,12 @@ def register(request):
     - 200 OK -> Redirect to home page.
     - 400 Bad Request -> Should redirect to login page and tell the user “The email or password is wrong”.
 '''
+@csrf_exempt
 def loginUser(request):
     form = LoginForm()
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+        email = request.GET.get('email')
+        password = request.GET.get('password')
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
@@ -140,6 +148,8 @@ def loginUser(request):
             return HttpResponse(json.dumps(result), status=200)
         else:
             # return redirect('login')
+            # return HttpResponse("{}, {}, {}".format(user, email, password))
+            print(user)
             return HttpResponse(status=400)
 
     context = {'title':'Login', 'form':form}
@@ -181,4 +191,5 @@ def accessToken(request):
         selectedUser.update(access_token=access_token)
     
     return user.access_token
+
 
