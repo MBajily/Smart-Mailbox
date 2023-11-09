@@ -14,16 +14,16 @@ from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 from passlib.hash import django_pbkdf2_sha256 as handler
 
-load_dotenv()
+# load_dotenv()
 
-clientId = os.getenv("CLIENT_ID")
-clientSecret = os.getenv('CLIENT_SECRET')
+# clientId = os.getenv("CLIENT_ID")
+# clientSecret = os.getenv('CLIENT_SECRET')
 
-# with open('/etc/config.json') as config_file:
-#     config = json.load(config_file)
+with open('/etc/config.json') as config_file:
+    config = json.load(config_file)
 
-# clientId = config["CLIENT_ID"]
-# clientSecret = config["CLIENT_SECRET"]
+clientId = config["CLIENT_ID"]
+clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -195,22 +195,22 @@ def accessToken(request):
     return user.access_token
 
 
-
+@csrf_exempt
 def is_email_exists(request):
-    lockId = request.GET.get('email')
+    email = request.GET.get('email')
 
     try:
         User.objects.get(email=email)
-        return True
+        return HttpResponse(status=400)
     except User.DoesNotExist:
-        return False
+        return HttpResponse(status=200)
 
-
+@csrf_exempt
 def is_username_exists(request):
-    lockId = request.GET.get('username')
+    username = request.GET.get('username')
 
     try:
         User.objects.get(username=username)
-        return True
+        return HttpResponse(status=400)
     except User.DoesNotExist:
-        return False
+        return HttpResponse(status=200)
