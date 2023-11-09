@@ -195,3 +195,22 @@ def accessToken(request):
     return user.access_token
 
 
+
+def is_email_exists(request):
+    lockId = request.GET.get('email')
+
+    try:
+        User.objects.get(email=email)
+        return True
+    except User.DoesNotExist:
+        return False
+
+
+def is_username_exists(request):
+    lockId = request.GET.get('username')
+
+    try:
+        User.objects.get(username=username)
+        return True
+    except User.DoesNotExist:
+        return False

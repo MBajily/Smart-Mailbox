@@ -12,16 +12,16 @@ from .forms import *
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-load_dotenv()
+# load_dotenv()
 
-clientId = os.getenv("CLIENT_ID")
-clientSecret = os.getenv('CLIENT_SECRET')
+# clientId = os.getenv("CLIENT_ID")
+# clientSecret = os.getenv('CLIENT_SECRET')
 
-# with open('/etc/config.json') as config_file:
-#     config = json.load(config_file)
+with open('/etc/config.json') as config_file:
+    config = json.load(config_file)
 
-# clientId = config["CLIENT_ID"]
-# clientSecret = config["CLIENT_SECRET"]
+clientId = config["CLIENT_ID"]
+clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -53,18 +53,24 @@ def lockList(request):
     
     if auth_token is None:
         return HttpResponse(status=401)
-    try:
-        user = request.user
-        date = round(time.time()*1000)
 
+    try:
+        # user = request.user
+        date = round(time.time()*1000)
         payload = {'clientId':clientId, 'accessToken':auth_token, 'date':date, 'pageNo':1, 'pageSize':100}
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         r = requests.get('https://cnapi.ttlock.com/v3/lock/list', headers=headers, params=payload)
+        
+        if "errcode" in (r.json()):
+            return HttpResponse(status=401)
+        
         return HttpResponse(r)
+
     except:
         redirect('logout')
-        return HttpResponse(status=400)
+        return HttpResponse(status=401)
 
+    return HttpResponse(status=401)
 
 '''
     Request URL:
@@ -91,18 +97,24 @@ def lockDetails(request):
     auth_token = request.META.get('HTTP_USER_TOKEN')
     if auth_token is None:
         return HttpResponse(status=401)
+
     try:
-        user = request.user
+        # user = request.user
         date = round(time.time()*1000)
         lockId = request.GET.get('lockId', '')
-
         payload = {'clientId':clientId, 'accessToken':auth_token, 'date':date, 'lockId':lockId}
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
         r = requests.get('https://cnapi.ttlock.com/v3/lock/detail', headers=headers, params=payload)
+        
+        if "errcode" in (r.json()):
+            return HttpResponse(status=401)
+
         return HttpResponse(r)
+
     except:
-        return HttpResponse(status=400)
+        return HttpResponse(status=401)
+
+    return HttpResponse(status=401)
 
 
 '''
@@ -122,23 +134,27 @@ def lockDetails(request):
 def lockDelete(request):
     if request.method == 'POST':
         auth_token = request.META.get('HTTP_USER_TOKEN')
+        
         if auth_token is None:
             return HttpResponse(status=401)
+        
         try:
-            user = request.user
+            # user = request.user
             date = round(time.time()*1000)
-            lockId = request.POST["lockId"]
-
-            payload = {'clientId':clientId, 'accessToken':auth_token, 'date':date, 'lockId':lockId}
+            lockId = request.GET.get("lockId")
+            payload = {'clientId':clientId, 'accessToken':auth_token, 'date':date, 'lockId':int(lockId)}
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
             r = requests.get('https://cnapi.ttlock.com/v3/lock/delete', headers=headers, params=payload)
+            
+            if (r.json())["errcode"] != 0:
+                return HttpResponse(status=401)
+            
             return HttpResponse(status=200)
         
         except:
             return HttpResponse(status=401)
 
-    return HttpResponse(status=400)
+    return HttpResponse(status=401)
 
 
 '''
@@ -158,20 +174,27 @@ def lockDelete(request):
 @csrf_exempt
 def lockNameUpdate(request):
     date = round(time.time()*1000)
-    user = request.user
-
+    # user = request.user
     if request.method == 'POST':
         auth_token = request.META.get('HTTP_USER_TOKEN')
+        
         if auth_token is None:
             return HttpResponse(status=401)
+        
         try:
             lockId = request.GET.get('lockId')
             lockAlias = request.GET.get("lockAlias")
             payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'lockAlias':lockAlias, 'date':date}
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             r = requests.post('https://cnapi.ttlock.com/v3/lock/rename', headers=headers, params=payload)
+        
+            if (r.json())["errcode"] != 0:
+                return HttpResponse(status=401)
+        
             return HttpResponse(status=200)
+        
         except:
             return HttpResponse(status=401)
 
     return HttpResponse(status=401)
+
