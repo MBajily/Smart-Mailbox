@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from api.models import *
 from .forms import *
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
 
 load_dotenv()
 
@@ -27,64 +29,6 @@ ttlock = TTLock(clientId, clientSecret)
 
 '''
     Request URL:
-    'lock/{lock_id}/passcode/{type_id}/new/'
-
-    Request parameters:
-    - Lock ID
-    - Type ID (1: one-time, 2: permanent)
-
-    Response:
-    - keyboardPwdId : passcode id
-    - keyboardPwd : passcode number
-'''
-def passcodeNew(request, lock_id, type_id):
-    user = request.user
-    date = round(time.time()*1000)
-
-    payload = {'clientId':clientId, 'accessToken':user.access_token, 'date':date, 'lockId':lock_id, 'keyboardPwdType':int(type_id), 'startDate':date}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-    r = requests.get('https://cnapi.ttlock.com/v3/keyboardPwd/get', headers=headers, params=payload)
-    if r.status_code == 200:
-        responseData = r.json()
-        newPasscode = Passcode(passcode_id=responseData["keyboardPwdId"], passcode=responseData["keyboardPwd"],
-                                type=type_id)
-        newPasscode.save()
-    # print(r.status_code, r.json()["keyboardPwdId"])
-    return HttpResponse(r)
-
-
-'''
-    Request URL:
-    'lock/<str:lock_id>/passcode/<str:passcode_id>/delete/'
-
-    Request parameters:
-    - Lock ID
-    - Passcode ID
-
-    Response:
-    - errorcode
-    - errormessage
-'''
-def passcodeDelete(request, lock_id, passcode_id):
-    user = request.user
-    date = round(time.time()*1000)
-
-    payload = {'clientId':clientId, 'accessToken':user.access_token, 'lockId':lock_id, 'keyboardPwdId':passcode_id, 'date':date}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-    r = requests.post('https://cnapi.ttlock.com/v3/keyboardPwd/delete', headers=headers, params=payload)
-    if r.status_code == 200:
-        responseData = r.json()
-
-        selectedPasscode = Passcode.objects.get(passcode_id=passcode_id)
-        if selectedPasscode:
-            selectedPasscode.delete()
-    return HttpResponse(r)
-
-
-'''
-    Request URL:
     'lock/{lock_id}/passcode/list/'
 
     Request parameters:
@@ -96,15 +40,69 @@ def passcodeDelete(request, lock_id, passcode_id):
     - keyboardPwdName : pascode name
     - sendDate : generate date
 '''
-def passcodeList(request, lock_id):
-    user = request.user
-    date = round(time.time()*1000)
+@csrf_exempt
+def passcodeList(request):
+    auth_token = request.META.get('HTTP_USER_TOKEN')
+    if auth_token is None:
+        return HttpResponse(status=401)
 
-    payload = {'clientId':clientId, 'accessToken':user.access_token, 'lockId':lock_id, 'pageNo':1, 'pageSize':100, 'date':date}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    try:
+        date = round(time.time()*1000)
+        data = json.loads(request.body.decode('utf-8'))
+        lockId = data.get('lockId')
 
-    r = requests.get('https://cnapi.ttlock.com/v3/lock/listKeyboardPwd', headers=headers, params=payload)
-    return HttpResponse(r)
+        payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'pageNo':1, 'pageSize':100, 'date':date}
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+
+        r = requests.get('https://cnapi.ttlock.com/v3/lock/listKeyboardPwd', headers=headers, params=payload)
+        if "errcode" in (r.json()):
+                return HttpResponse(status=401)
+
+        return HttpResponse(r)
+
+    except:
+        return HttpResponse(status=401)
+
+
+'''
+    Request URL:
+    'lock/{lock_id}/passcode/{type_id}/new/'
+
+    Request parameters:
+    - Lock ID
+    - Type ID (1: one-time, 2: permanent)
+
+    Response:
+    - keyboardPwdId : passcode id
+    - keyboardPwd : passcode number
+'''
+@csrf_exempt
+def passcodeNew(request):
+    if request.method == "POST":
+        auth_token = request.META.get('HTTP_USER_TOKEN')
+        if auth_token is None:
+            return HttpResponse(status=401)
+
+        try:
+            date = round(time.time()*1000)
+            data = json.loads(request.body.decode('utf-8'))
+            lockId = data.get('lockId')
+            passcodeType = data.get('passcodeType')
+
+            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'keyboardPwdType':int(passcodeType), 'startDate':date, 'date':date}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            r = requests.get('https://cnapi.ttlock.com/v3/keyboardPwd/get', headers=headers, params=payload)
+            
+            if "errcode" in (r.json()):
+                return HttpResponse(status=401)
+
+            # print(r.status_code, r.json()["keyboardPwdId"])
+            return HttpResponse(r)
+
+        except:
+            return HttpResponse(status=401)
+
+    return HttpResponse(status=400)
 
 
 '''
@@ -120,14 +118,71 @@ def passcodeList(request, lock_id):
     - errorcode
     - errormessage
 '''
-def passcodeUpdate(request,lock_id, passcode_id, passcode):
-    date = round(time.time()*1000)
-    user = request.user
-    payload = {'clientId':clientId, 'accessToken':user.access_token, 'lockId':lock_id, 'keyboardPwdId':passcode_id, 'newKeyboardPwd':passcode, 'date':date}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    if int(passcode):
+@csrf_exempt
+def passcodeUpdate(request):
+    if request.method == "POST":
+        auth_token = request.META.get('HTTP_USER_TOKEN')
+        if auth_token is None:
+            return HttpResponse(status=401)
 
-        r = requests.post('https://cnapi.ttlock.com/v3/keyboardPwd/change', headers=headers, params=payload)
-        return HttpResponse(r)
+        try:
+            date = round(time.time()*1000)
+            data = json.loads(request.body.decode('utf-8'))
+            lockId = data.get('lockId')
+            passcodeId = data.get('passcodeId')
+            passcode = data.get('passcode')
 
-    return HttpResponse("Write a valid passcode using numbers!")
+            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'keyboardPwdId':passcodeId, 'newKeyboardPwd':passcode, 'date':date}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            r = requests.post('https://cnapi.ttlock.com/v3/keyboardPwd/change', headers=headers, params=payload)
+            if (r.json())["errcode"] != 0:
+                return HttpResponse(status=401)
+
+            return HttpResponse(status=200)
+
+        except:
+            return HttpResponse(status=401)
+
+    return HttpResponse(status=400)
+
+
+'''
+    Request URL:
+    'lock/<str:lock_id>/passcode/<str:passcode_id>/delete/'
+
+    Request parameters:
+    - Lock ID
+    - Passcode ID
+
+    Response:
+    - errorcode
+    - errormessage
+'''
+@csrf_exempt
+def passcodeDelete(request):
+    if request.method == "POST":
+        auth_token = request.META.get('HTTP_USER_TOKEN')
+        if auth_token is None:
+            return HttpResponse(status=401)
+
+        try:
+            date = round(time.time()*1000)
+            data = json.loads(request.body.decode('utf-8'))
+            lockId = data.get('lockId')
+            passcodeId = data.get('passcodeId')
+
+            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'keyboardPwdId':passcodeId, 'date':date}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            r = requests.post('https://cnapi.ttlock.com/v3/keyboardPwd/delete', headers=headers, params=payload)
+
+            if (r.json())["errcode"] != 0:
+                return HttpResponse(status=401)
+
+            return HttpResponse(status=200)
+
+        except:
+            return HttpResponse(status=401)
+
+    return HttpResponse(status=400)
+
+

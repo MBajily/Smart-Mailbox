@@ -14,16 +14,16 @@ from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 from passlib.hash import django_pbkdf2_sha256 as handler
 
-# load_dotenv()
+load_dotenv()
 
-# clientId = os.getenv("CLIENT_ID")
-# clientSecret = os.getenv('CLIENT_SECRET')
+clientId = os.getenv("CLIENT_ID")
+clientSecret = os.getenv('CLIENT_SECRET')
 
-with open('/etc/config.json') as config_file:
-    config = json.load(config_file)
+# with open('/etc/config.json') as config_file:
+#     config = json.load(config_file)
 
-clientId = config["CLIENT_ID"]
-clientSecret = config["CLIENT_SECRET"]
+# clientId = config["CLIENT_ID"]
+# clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -50,44 +50,47 @@ ttlock = TTLock(clientId, clientSecret)
 @csrf_exempt
 def register(request):
     if request.method == 'POST':
-        # formset = RegisterForm(request.POST)
+        data = json.loads(request.body.decode('utf-8'))
         try:
-            formset = User.objects.create(email = request.GET.get('email'),
-                username = request.GET.get('username'),
-                password = handler.hash(request.GET.get('password')))
+            email = data.get('email')
+            username = data.get('username')
+            password = data.get('password')
+            request_body = {}
+
+            if is_username_exists(username):
+                request_body["error"] = {"code": 1001}
+
+            if is_email_exists(email):
+                request_body["error"] = {"code": 1002}
+                
+            if is_email_exists(email) or is_username_exists(username):
+                return HttpResponse(request_body, status=400)
+
+            formset = User.objects.create(email = email,
+                username = username,
+                password = handler.hash(password))
             if formset:
                 formset.save()
-                email = request.GET.get('email')
-                username = request.GET.get('username')
-                password = request.GET.get('password')
                 hashed_password = hashlib.md5(password.encode()).hexdigest()
                 selected_client = User.objects.filter(email=email)
                 new_user = ttlock.create_user(clientId=clientId, clientSecret=clientSecret, username=username, password=hashed_password)
                 try:
                     access_token = ttlock.get_token(clientId=clientId, clientSecret=clientSecret, username=new_user['username'], password=hashed_password, redirect_uri='')
-                    # print(selected_client)
                     selected_client.update(ttlock_username=new_user['username'], hashed_password=hashed_password,
                                             access_token=access_token['access_token'])
-                    # print(selected_client)
                     selectedProfile = UserProfile.objects.filter(user__in=selected_client).first()
-                    selectedProfile.full_name = request.GET.get('full_name')
-                    selectedProfile.phone = request.GET.get('phone')
-                    selectedProfile.birth_date = request.GET.get('birth_date')
-                    selectedProfile.gender = request.GET.get('gender')
-                    # print(selectedProfile)
+                    selectedProfile.full_name = data.get('full_name')
+                    selectedProfile.phone = data.get('phone')
+                    selectedProfile.birth_date = data.get('birth_date')
+                    selectedProfile.gender = data.get('gender')
                     if selectedProfile:
-                        print('here1')
                         selectedProfile.save()
-                        print('here2')
                         result = {}
-                        print('here3')
                         result["USER_TOKEN"] = access_token['access_token']
-                        print('here4')
                         return HttpResponse(json.dumps(result))
                     
                 except Exception as e:
                     date = round(time.time()*1000)
-                    # print(new_user['username'])
                     payload = {'clientId':clientId, 'clientSecret':clientSecret, 'date':date, 'username':new_user['username']}
                     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
                     requests.post('https://euapi.ttlock.com/v3/user/delete', headers=headers, params=payload)
@@ -104,7 +107,6 @@ def register(request):
         except Exception as e:
             # print(e)
             # return redirect('register')
-            # return HttpResponse(e)
             return HttpResponse(status=400)
                 
         # return redirect('register')
@@ -137,21 +139,20 @@ def register(request):
 def loginUser(request):
     form = LoginForm()
     if request.method == 'POST':
-        email = request.GET.get('email')
-        password = request.GET.get('password')
+        data = json.loads(request.body.decode('utf-8'))
+        email = data.get('email')
+        password = data.get('password')
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-            access_token = accessToken(request) # Done
-            # return redirect('lockList')
-            # return HttpResponse(status=200)
+            # access_token = accessToken(request) # Done
             result = {}
-            result["USER_TOKEN"] = access_token
+            result["USER_TOKEN"] = user.access_token
             return HttpResponse(json.dumps(result), status=200)
         else:
-            # return redirect('login')
             # return HttpResponse("{}, {}, {}".format(user, email, password))
-            print(user)
+            # print('email=', email,', password=',password)
+            # print(user)
             return HttpResponse(status=400)
 
     context = {'title':'Login', 'form':form}
@@ -174,7 +175,6 @@ def loginUser(request):
 def logoutUser(request):
     try:
         logout(request)
-        # return redirect('login')
         return HttpResponse(status=200)
     except:
         return HttpResponse(status=400)
@@ -196,21 +196,23 @@ def accessToken(request):
 
 
 @csrf_exempt
-def is_email_exists(request):
-    email = request.GET.get('email')
+def is_email_exists(request, email):
+    # data = json.loads(request.body.decode('utf-8'))
+    # email = data.get('email')
 
     try:
         User.objects.get(email=email)
-        return HttpResponse(status=400)
+        return True
     except User.DoesNotExist:
-        return HttpResponse(status=200)
+        return False
 
 @csrf_exempt
-def is_username_exists(request):
-    username = request.GET.get('username')
+def is_username_exists(request, username):
+    # data = json.loads(request.body.decode('utf-8'))
+    # username = data.get('username')
 
     try:
         User.objects.get(username=username)
-        return HttpResponse(status=400)
+        return True
     except User.DoesNotExist:
-        return HttpResponse(status=200)
+        return False

@@ -12,16 +12,16 @@ from .forms import *
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-# load_dotenv()
+load_dotenv()
 
-# clientId = os.getenv("CLIENT_ID")
-# clientSecret = os.getenv('CLIENT_SECRET')
+clientId = os.getenv("CLIENT_ID")
+clientSecret = os.getenv('CLIENT_SECRET')
 
-with open('/etc/config.json') as config_file:
-    config = json.load(config_file)
+# with open('/etc/config.json') as config_file:
+#     config = json.load(config_file)
 
-clientId = config["CLIENT_ID"]
-clientSecret = config["CLIENT_SECRET"]
+# clientId = config["CLIENT_ID"]
+# clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -101,7 +101,8 @@ def lockDetails(request):
     try:
         # user = request.user
         date = round(time.time()*1000)
-        lockId = request.GET.get('lockId', '')
+        data = json.loads(request.body.decode('utf-8'))
+        lockId = data.get('lockId')
         payload = {'clientId':clientId, 'accessToken':auth_token, 'date':date, 'lockId':lockId}
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         r = requests.get('https://cnapi.ttlock.com/v3/lock/detail', headers=headers, params=payload)
@@ -141,7 +142,8 @@ def lockDelete(request):
         try:
             # user = request.user
             date = round(time.time()*1000)
-            lockId = request.GET.get("lockId")
+            data = json.loads(request.body.decode('utf-8'))
+            lockId = data.get("lockId")
             payload = {'clientId':clientId, 'accessToken':auth_token, 'date':date, 'lockId':int(lockId)}
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             r = requests.get('https://cnapi.ttlock.com/v3/lock/delete', headers=headers, params=payload)
@@ -182,8 +184,9 @@ def lockNameUpdate(request):
             return HttpResponse(status=401)
         
         try:
-            lockId = request.GET.get('lockId')
-            lockAlias = request.GET.get("lockAlias")
+            data = json.loads(request.body.decode('utf-8'))
+            lockId = data.get('lockId')
+            lockAlias = data.get("lockAlias")
             payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'lockAlias':lockAlias, 'date':date}
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             r = requests.post('https://cnapi.ttlock.com/v3/lock/rename', headers=headers, params=payload)
