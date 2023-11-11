@@ -130,9 +130,13 @@ def passcodeUpdate(request):
             data = json.loads(request.body.decode('utf-8'))
             lockId = data.get('lockId')
             passcodeId = data.get('passcodeId')
+            passcodeName = data.get('passcodeName')
             passcode = data.get('passcode')
 
-            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'keyboardPwdId':passcodeId, 'newKeyboardPwd':passcode, 'date':date}
+            payload = {'clientId':clientId, 'accessToken':auth_token,
+                        'lockId':lockId, 'keyboardPwdId':passcodeId,
+                        'keyboardPwdName':passcodeName, 'newKeyboardPwd':passcode,
+                        'date':date}
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             r = requests.post('https://cnapi.ttlock.com/v3/keyboardPwd/change', headers=headers, params=payload)
             if (r.json())["errcode"] != 0:

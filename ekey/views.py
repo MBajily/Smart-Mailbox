@@ -25,7 +25,7 @@ clientSecret = os.getenv('CLIENT_SECRET')
 # clientId = config["CLIENT_ID"]
 # clientSecret = config["CLIENT_SECRET"]
 
-ttlock = TTLock(clientId, clientSecret)
+# ttlock = TTLock(clientId, clientSecret)
 
 
 '''
@@ -57,14 +57,21 @@ def register(request):
             password = data.get('password')
             request_body = {}
 
-            if is_username_exists(username):
-                request_body["error"] = {"code": 1001}
+            if is_email_exists(request, email) and is_username_exists(request, username):
+                request_body["errors"] = []
+                request_body["errors"].append({"error": {"code": 1001, "message": "Username already exists"}})
+                request_body["errors"].append({"error": {"code": 1002, "message": "Email already exists"}})
+                return HttpResponse(json.dumps(request_body), status=400)
 
-            if is_email_exists(email):
-                request_body["error"] = {"code": 1002}
-                
-            if is_email_exists(email) or is_username_exists(username):
-                return HttpResponse(request_body, status=400)
+            if is_email_exists(request, email) or is_username_exists(request, username):
+                request_body["errors"] = []
+                if is_username_exists(request, username):
+                    request_body["errors"].append({"error": {"code": 1001, "message": "Username already exists"}})
+
+                if is_email_exists(request, email):
+                    request_body["errors"].append({"error": {"code": 1002, "message": "Email already exists"}})
+
+                return HttpResponse(json.dumps(request_body), status=400)
 
             formset = User.objects.create(email = email,
                 username = username,
@@ -105,7 +112,7 @@ def register(request):
 
 
         except Exception as e:
-            # print(e)
+            print(e)
             # return redirect('register')
             return HttpResponse(status=400)
                 
