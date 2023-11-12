@@ -72,6 +72,7 @@ def lockList(request):
 
     return HttpResponse(status=401)
 
+
 '''
     Request URL:
     https://api.sahlbox.com/lock/details/

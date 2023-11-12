@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, passcode, lock, profile
+from . import views, passcode, lock, profile, records
 from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
@@ -25,4 +25,8 @@ urlpatterns = [
 	path('lock/passcode/new/', passcode.passcodeNew, name="passcodeNew"),
 	path('lock/passcode/update/', passcode.passcodeUpdate, name="passcodeUpdate"),
 	path('lock/passcode/delete/', passcode.passcodeDelete, name="passcodeDelete"),
+
+	# Records
+	path('records/callback/', records.recordsCallback, name="recordsCallback"),
+	path('records/', records.records, name="records"),
 ]

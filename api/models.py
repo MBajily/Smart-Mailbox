@@ -151,11 +151,11 @@ class Record(models.Model):
 # ===============================================================
 class Notification(models.Model):
     notification_id = models.IntegerField(primary_key=True, editable=False)
-    sender = models.CharField(max_length=100)
-    receiver = models.CharField(max_length=100)
-    title = models.CharField(max_length=100)
-    content = models.CharField(max_length=1000)
-    date = models.DateTimeField(auto_now_add=True)
+    lockId = models.CharField(max_length=100, null=True)
+    recordType = models.CharField(max_length=100, null=True)
+    success = models.CharField(max_length=100, null=True)
+    keyboardPwd = models.CharField(max_length=100, null=True)
+    lockDate = models.DateTimeField(auto_now_add=True, null=True)
 
 
 # ===============================================================

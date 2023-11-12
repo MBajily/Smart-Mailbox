@@ -28,15 +28,50 @@ ttlock = TTLock(clientId, clientSecret)
 
 
 @csrf_exempt
-def recordsCallback(request):
-	if request.method == "POST":
-		data = json.loads(request.body.decode('utf-8'))
-		lockId = data.get('lockId')
-		data = json.loads(data.get('records'))
-		recordType = data.get('recordType')
-		success = data.get('success')
-		keyboardPwd = data.get('keyboardPwd')
-		lockDate = datetime.fromtimestamp(data.get('lockDate'))
+def records(request):
+    auth_token = request.META.get('HTTP_USER_TOKEN')
+    
+    if auth_token is None:
+        return HttpResponse(status=401)
 
-		response = {"success"} 
-		return HttpResponse(json.dumps(response), status=200)
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        date = round(time.time()*1000)
+        payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'date':date, 'pageNo':1, 'pageSize':100}
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        r = requests.get('https://euapi.ttlock.com/v3/lockRecord/list', headers=headers, params=payload)
+
+        return HttpResponse(r)
+
+    except:
+        return HttpResponse(status=400)
+
+
+
+@csrf_exempt
+def recordsCallback(request):
+    if request.method == "POST":
+        try:
+            # data = json.loads(request.body.decode('utf-8'))
+            lockId = request.POST.get('lockId')
+            data = request.POST.get('records')
+            print(data)
+            data = json.loads(data)
+            for record in data:
+                print('record=', record)
+                recordType = record.get('recordType')
+                success = record.get('success')
+                keyboardPwd = record.get('keyboardPwd')
+                timestamp =  int(record.get('lockDate'))/1000
+                lockDate = datetime.datetime.fromtimestamp(timestamp)
+
+                notification = Notification(lockId=lockId, recordType=recordType, success=success, keyboardPwd=keyboardPwd, lockDate=lockDate)
+                notification.save()
+
+            response = {"success"} 
+            return HttpResponse(response, status=200)
+
+        except Exception as e:
+            return HttpResponse(e, status=400)
+
+    return HttpResponse(status=400)
