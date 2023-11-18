@@ -13,6 +13,9 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 from passlib.hash import django_pbkdf2_sha256 as handler
+from django.contrib.auth.forms import PasswordResetForm
+from django.conf import settings
+
 
 load_dotenv()
 
@@ -25,7 +28,7 @@ clientSecret = os.getenv('CLIENT_SECRET')
 # clientId = config["CLIENT_ID"]
 # clientSecret = config["CLIENT_SECRET"]
 
-# ttlock = TTLock(clientId, clientSecret)
+ttlock = TTLock(clientId, clientSecret)
 
 
 '''
@@ -203,9 +206,9 @@ def accessToken(request):
 
 
 @csrf_exempt
-def is_email_exists(request, email):
-    # data = json.loads(request.body.decode('utf-8'))
-    # email = data.get('email')
+def is_email_exists(request):
+    data = json.loads(request.body.decode('utf-8'))
+    email = data.get('email')
 
     try:
         User.objects.get(email=email)
@@ -214,12 +217,35 @@ def is_email_exists(request, email):
         return False
 
 @csrf_exempt
-def is_username_exists(request, username):
-    # data = json.loads(request.body.decode('utf-8'))
-    # username = data.get('username')
+def is_username_exists(request):
+    data = json.loads(request.body.decode('utf-8'))
+    username = data.get('username')
 
     try:
         User.objects.get(username=username)
         return True
     except User.DoesNotExist:
         return False
+
+
+@csrf_exempt
+def passwordReset(request):
+    if request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        email = data.get('email')
+        form = PasswordResetForm({'email': email})
+        if form.is_valid():
+            form.save(
+                request=request,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                # email_template_name='registration/password_reset_email.html',
+                # subject_template_name='registration/password_reset_subject.txt',
+            )
+            return HttpResponse(status=200)
+            # return JsonResponse({'success': True, 'message': 'Password reset email has been sent.'})
+        else:
+            return HttpResponse(status=400)
+            # return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        return HttpResponse(status=400)
+        # return JsonResponse({'success': False, 'message': 'Invalid request method.'})

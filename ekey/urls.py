@@ -2,6 +2,7 @@ from django.urls import path
 from . import views, passcode, lock, profile, records
 from django.views.decorators.csrf import csrf_exempt
 
+
 urlpatterns = [
 	# User
 	path('register/', views.register, name="register"),
@@ -29,4 +30,7 @@ urlpatterns = [
 	# Records
 	path('records/callback/', records.recordsCallback, name="recordsCallback"),
 	path('records/', records.records, name="records"),
-]
+
+	# Reset Password
+	path('password/reset/', views.passwordReset, name="password_reset"),
+	]

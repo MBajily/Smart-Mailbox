@@ -37,14 +37,18 @@ def records(request):
     try:
         data = json.loads(request.body.decode('utf-8'))
         date = round(time.time()*1000)
+        lockId = data.get('lockId')
         payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'date':date, 'pageNo':1, 'pageSize':100}
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         r = requests.get('https://euapi.ttlock.com/v3/lockRecord/list', headers=headers, params=payload)
+        
+        if "errcode" in (r.json()):
+            return HttpResponse(r, status=401)
 
         return HttpResponse(r)
 
     except:
-        return HttpResponse(status=400)
+        return HttpResponse(status=401)
 
 
 
