@@ -17,16 +17,16 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.conf import settings
 
 
-load_dotenv()
+# load_dotenv()
 
-clientId = os.getenv("CLIENT_ID")
-clientSecret = os.getenv('CLIENT_SECRET')
+# clientId = os.getenv("CLIENT_ID")
+# clientSecret = os.getenv('CLIENT_SECRET')
 
-# with open('/etc/config.json') as config_file:
-#     config = json.load(config_file)
+with open('/etc/config.json') as config_file:
+    config = json.load(config_file)
 
-# clientId = config["CLIENT_ID"]
-# clientSecret = config["CLIENT_SECRET"]
+clientId = config["CLIENT_ID"]
+clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -60,18 +60,18 @@ def register(request):
             password = data.get('password')
             request_body = {}
 
-            if is_email_exists(request, email) and is_username_exists(request, username):
+            if is_email_exists(email) and is_username_exists(username):
                 request_body["errors"] = []
                 request_body["errors"].append({"error": {"code": 1001, "message": "Username already exists"}})
                 request_body["errors"].append({"error": {"code": 1002, "message": "Email already exists"}})
                 return HttpResponse(json.dumps(request_body), status=400)
 
-            if is_email_exists(request, email) or is_username_exists(request, username):
+            if is_email_exists(email) or is_username_exists(username):
                 request_body["errors"] = []
-                if is_username_exists(request, username):
+                if is_username_exists(username):
                     request_body["errors"].append({"error": {"code": 1001, "message": "Username already exists"}})
 
-                if is_email_exists(request, email):
+                if is_email_exists(email):
                     request_body["errors"].append({"error": {"code": 1002, "message": "Email already exists"}})
 
                 return HttpResponse(json.dumps(request_body), status=400)
@@ -206,9 +206,35 @@ def accessToken(request):
 
 
 @csrf_exempt
-def is_email_exists(request):
+def emailExists(request):
     data = json.loads(request.body.decode('utf-8'))
     email = data.get('email')
+
+    try:
+        User.objects.get(email=email)
+        return HttpResponse(status=200)
+
+    except User.DoesNotExist:
+        return HttpResponse(status=400)
+
+@csrf_exempt
+def usernameExists(request):
+    data = json.loads(request.body.decode('utf-8'))
+    username = data.get('username')
+
+    try:
+        User.objects.get(username=username)
+        return HttpResponse(status=200)
+
+    except User.DoesNotExist:
+        return HttpResponse(status=400)
+
+
+@csrf_exempt
+def is_email_exists(request):
+    # data = json.loads(request.body.decode('utf-8'))
+    # email = data.get('email')
+    email = request
 
     try:
         User.objects.get(email=email)
@@ -218,8 +244,9 @@ def is_email_exists(request):
 
 @csrf_exempt
 def is_username_exists(request):
-    data = json.loads(request.body.decode('utf-8'))
-    username = data.get('username')
+    # data = json.loads(request.body.decode('utf-8'))
+    # username = data.get('username')
+    username = request
 
     try:
         User.objects.get(username=username)
@@ -231,21 +258,31 @@ def is_username_exists(request):
 @csrf_exempt
 def passwordReset(request):
     if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        email = data.get('email')
-        form = PasswordResetForm({'email': email})
-        if form.is_valid():
-            form.save(
-                request=request,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                # email_template_name='registration/password_reset_email.html',
-                # subject_template_name='registration/password_reset_subject.txt',
-            )
-            return HttpResponse(status=200)
-            # return JsonResponse({'success': True, 'message': 'Password reset email has been sent.'})
-        else:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            email = data.get('email')
+            print(email)
+            if is_email_exists(email) == False:
+                return HttpResponse(status=400)
+            print(email)
+
+            form = PasswordResetForm({'email': email})
+            if form.is_valid():
+                form.save(
+                    request=request,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    # email_template_name='registration/password_reset_email.html',
+                    # subject_template_name='registration/password_reset_subject.txt',
+                )
+                return HttpResponse(status=200)
+                # return JsonResponse({'success': True, 'message': 'Password reset email has been sent.'})
+            else:
+                return HttpResponse(status=400)
+                # return JsonResponse({'success': False, 'errors': form.errors})
+
+        except Exception as e:
             return HttpResponse(status=400)
-            # return JsonResponse({'success': False, 'errors': form.errors})
+
     else:
         return HttpResponse(status=400)
         # return JsonResponse({'success': False, 'message': 'Invalid request method.'})

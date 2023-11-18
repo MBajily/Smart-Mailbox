@@ -544,7 +544,7 @@ label.valid {
     margin-right: 0px;
     padding-left: 0px;
     /* box-sizing: border-box; */
-    padding: 5rem 5rem 0; }
+    padding: 5rem 10px 0; }
 
   .signin-image {
     margin-left: 0px;
@@ -580,7 +580,13 @@ label.valid {
     padding: 0 30px; }
 
   .form-title {
-    text-align: center; } }
+    text-align: center;
+    font-size: 28px;}
+
+  img {
+    width: 10rem;
+  }
+  }
 @media screen and (max-width: 400px) {
   .social-login {
     flex-direction: column;
