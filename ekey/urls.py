@@ -19,6 +19,7 @@ urlpatterns = [
 	path('lock/list/', lock.lockList, name="lockList"),
 	path('lock/details/', lock.lockDetails, name="lockDetails"),
 	path('lock/name/update/', lock.lockNameUpdate, name="lockNameUpdate"),
+	path('lock/sound/update/', lock.lockSoundUpdate, name="lockSoundUpdate"),
 	path('lock/delete/', lock.lockDelete, name="lockDelete"),
 
 	# Passcode

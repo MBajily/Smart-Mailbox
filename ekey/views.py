@@ -17,16 +17,16 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.conf import settings
 
 
-# load_dotenv()
+load_dotenv()
 
-# clientId = os.getenv("CLIENT_ID")
-# clientSecret = os.getenv('CLIENT_SECRET')
+clientId = os.getenv("CLIENT_ID")
+clientSecret = os.getenv('CLIENT_SECRET')
 
-with open('/etc/config.json') as config_file:
-    config = json.load(config_file)
+# with open('/etc/config.json') as config_file:
+#     config = json.load(config_file)
 
-clientId = config["CLIENT_ID"]
-clientSecret = config["CLIENT_SECRET"]
+# clientId = config["CLIENT_ID"]
+# clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 

@@ -9,19 +9,19 @@ from ttlockwrapper import TTLock
 from dotenv import load_dotenv
 from api.models import *
 from .forms import *
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-load_dotenv()
+# load_dotenv()
 
-clientId = os.getenv("CLIENT_ID")
-clientSecret = os.getenv('CLIENT_SECRET')
+# clientId = os.getenv("CLIENT_ID")
+# clientSecret = os.getenv('CLIENT_SECRET')
 
-# with open('/etc/config.json') as config_file:
-#     config = json.load(config_file)
+with open('/etc/config.json') as config_file:
+    config = json.load(config_file)
 
-# clientId = config["CLIENT_ID"]
-# clientSecret = config["CLIENT_SECRET"]
+clientId = config["CLIENT_ID"]
+clientSecret = config["CLIENT_SECRET"]
 
 ttlock = TTLock(clientId, clientSecret)
 
@@ -176,9 +176,8 @@ def lockDelete(request):
 '''
 @csrf_exempt
 def lockNameUpdate(request):
-    date = round(time.time()*1000)
-    # user = request.user
     if request.method == 'POST':
+        date = round(time.time()*1000)
         auth_token = request.META.get('HTTP_USER_TOKEN')
         
         if auth_token is None:
@@ -202,3 +201,31 @@ def lockNameUpdate(request):
 
     return HttpResponse(status=401)
 
+
+@csrf_exempt
+def lockSoundUpdate(request):
+    if request.method == 'POST':
+        auth_token = request.META.get('HTTP_USER_TOKEN')
+        
+        if auth_token is None:
+            return HttpResponse(status=401)
+
+        try:
+            date = round(time.time()*1000)
+            data = json.loads(request.body.decode('utf-8'))
+            lockId = data.get('lockId')
+            value = data.get('sound')
+
+            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'type':6, 'value':value, 'date':date}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            r = requests.post('https://euapi.ttlock.com/v3/lock/updateSetting', headers=headers, params=payload)
+            
+            if (r.json())["errcode"] != 0:
+                return HttpResponse(status=401)
+
+            return JsonResponse({"sound":value})
+
+        except Exception as e:
+            return HttpResponse(status=401)
+
+    return HttpResponse(status=401)
