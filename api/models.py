@@ -172,3 +172,16 @@ class Alarm(models.Model):
     receiver = models.CharField(max_length=100)
     type = models.CharField(max_length=50, choices=AlarmTypes)
     date = models.DateTimeField(auto_now_add=True)
+
+
+
+# ===============================================================
+# =====================  Location  ==============================
+# ===============================================================
+class Location(models.Model):
+    lock_id = models.IntegerField(primary_key=True, null=False)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+
+    def __str__(self):
+        return f"https://maps.google.com/?q={self.latitude},{self.longitude}"
