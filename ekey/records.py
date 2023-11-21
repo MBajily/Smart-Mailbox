@@ -44,12 +44,46 @@ def records(request):
         
         if "errcode" in (r.json()):
             return HttpResponse(r, status=401)
+        
+        r_json = r.json()["list"]
 
-        return HttpResponse(r)
+        result = []
+
+        for record in r_json:
+            element = {
+                "recordType":record["recordType"],
+                }
+            record_type = record["recordType"]
+            if record_type == 1:
+                element["message"] = "تم فتح الصندوق باستخدام التطبيق"
+            
+            elif record_type == 4:
+                if record["success"] == 1:
+                    element["message"] = "تم فتح الصندوق باستخدام الكود " + "(***" + record["keyboardPwd"][:5] + ")"
+                else:
+                    element["message"] = "فشلت عملية فتح الصندوق بالكود " + "(***" + record["keyboardPwd"][:5] + ")"
+
+            elif record_type == 48:
+                element["message"] = "تحذير! تم اكتشاف محاولات وصول غير مصرح بها"
+            
+            elif record_type == 11:
+                element["message"] = "تم إغلاق الصندوق بنجاح"
+
+            elif record_type == 45:
+                element["message"] = "تم إغلاق الصندوق بنجاح (تلقائيا)"
+
+            elif record_type == 10:
+                element["message"] = "تم فتح الصندوق باستخدام المفتاح اليدوي"
+            
+            timestamp =  int(record["lockDate"])/1000
+            recordDate = datetime.datetime.fromtimestamp(timestamp)
+            element["date"] = str(recordDate)
+            result.append(element)
+
+        return HttpResponse(json.dumps(result))
 
     except:
         return HttpResponse(status=401)
-
 
 
 @csrf_exempt
