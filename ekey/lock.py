@@ -26,27 +26,34 @@ clientSecret = os.getenv('CLIENT_SECRET')
 ttlock = TTLock(clientId, clientSecret)
 
 
-'''
-    Request URL:
-    https://api.sahlbox.com/lock/list/
+@csrf_exempt
+def lockInit(request):
+    if request.method == 'POST':
+        auth_token = request.META.get('HTTP_USER_TOKEN')
+        
+        if auth_token is None:
+            return HttpResponse(status=401)
+        
+        try:
+            date = round(time.time()*1000)
+            data = json.loads(request.body.decode('utf-8'))
+            lockData = data.get('lockData')
+            print("lockData =",lockData)
+            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockData':lockData, 'date':date}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            r = requests.post('https://cnapi.ttlock.com/v3/lock/initialize', headers=headers, params=payload)
+        
+            if "errcode" in (r.json()):
+                return HttpResponse(r, status=401)
+        
+            return HttpResponse(r)
+        
+        except:
+            return HttpResponse(status=401)
 
-    Request Method: GET
+    return HttpResponse(status=401)
 
-    Request parameters:
-    - No require
 
-    Response:
-    - 200 OK
-        Parameter:
-        - list (JSONArray):
-            - lockId
-            - lockName
-        - pageNo
-        - pageSize
-        - pages
-        - total
-    - 400 Bad Request -> Redirect to login page
-'''
 @csrf_exempt
 def lockList(request):
     auth_token = request.META.get('HTTP_USER_TOKEN')
@@ -73,26 +80,6 @@ def lockList(request):
     return HttpResponse(status=401)
 
 
-'''
-    Request URL:
-    https://api.sahlbox.com/lock/details/
-
-    Request Method: GET
-
-    Request parameters:
-    - lockId
-
-    Response:
-    - 200 OK
-        Parameter:
-        - lockId
-        - lockName
-        - lockMac
-        - lockSound (0-unknow, 1-on, 2-off)
-    
-    or
-    - 400 Bad Request -> Stay in same page
-'''
 @csrf_exempt
 def lockDetails(request):
     auth_token = request.META.get('HTTP_USER_TOKEN')
@@ -119,19 +106,6 @@ def lockDetails(request):
     return HttpResponse(status=401)
 
 
-'''
-    Request URL:
-    https://api.sahlbox.com/lock/<str:lock_id>/details/
-
-    Request Method: POST
-
-    Request parameters:
-    - lock_id
-
-    Response:
-    - 200 OK.
-    - 400 Bad Request.
-'''
 @csrf_exempt
 def lockDelete(request):
     if request.method == 'POST':
@@ -160,20 +134,6 @@ def lockDelete(request):
     return HttpResponse(status=401)
 
 
-'''
-    Request URL:
-    https://api.sahlbox.com/lock/name/update/
-
-    Request Method: POST
-
-    Request parameters:
-    - lockId
-    - lockAlias
-
-    Response:
-    - 200 OK.
-    - 400 Bad Request.
-'''
 @csrf_exempt
 def lockNameUpdate(request):
     if request.method == 'POST':

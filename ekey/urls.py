@@ -16,6 +16,7 @@ urlpatterns = [
     path('profile/update/', profile.profileUpdate, name="profileUpdate"),
 
     # Lock
+    path('lock/init/', lock.lockInit, name="lockInit"),
     path('lock/list/', lock.lockList, name="lockList"),
     path('lock/details/', lock.lockDetails, name="lockDetails"),
     path('lock/name/update/', lock.lockNameUpdate, name="lockNameUpdate"),

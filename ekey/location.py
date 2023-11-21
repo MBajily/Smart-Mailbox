@@ -1,6 +1,7 @@
 import os
 import datetime
 import time
+import requests
 import json
 from dotenv import load_dotenv
 from api.models import Location
@@ -41,15 +42,15 @@ def lockLocation(request):
             r = requests.get('https://cnapi.ttlock.com/v3/lock/detail', headers=headers, params=payload)
             
             if "errcode" in (r.json()):
-                return HttpResponse(status=401)
+                return HttpResponse(status=404)
 
             location = Location(lock_id=lock_id, latitude=latitude, longitude=longitude)
             location.save()
 
             return JsonResponse({"location":f"https://maps.google.com/?q={latitude},{longitude}"})
 
-        except:
-            return HttpResponse(status=401)
+        except Exception as e:
+            return HttpResponse(e, status=401)
 
     return HttpResponse(status=401)
 
