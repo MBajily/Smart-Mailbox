@@ -26,10 +26,31 @@ clientSecret = os.getenv('CLIENT_SECRET')
 
 
 @csrf_exempt
-def records(request):
+def notifications(request):
     auth_token = request.META.get('HTTP_USER_TOKEN')
     
     if auth_token is None:
         return HttpResponse(status=401)
+
+    try:
+        selectedUser = User.objects.get(access_token=auth_token)
+        notifications = Notification.objects.filter(receiver=selectedUser).all()
+        result = []
+
+        for notification in notifications:
+            item = {}
+            item["subject"] = notification.subject
+            item["message"] = notification.message
+            item["date"] = str(notification.date)[:19]
+
+            result.append(item)
+
+        return HttpResponse(json.dumps(result))
+
+    except Exception as e:
+        return HttpResponse(e, status=400)
+
+    return HttpResponse(status=400)
+
 
     

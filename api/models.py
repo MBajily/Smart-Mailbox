@@ -128,8 +128,8 @@ class Passcode(models.Model):
 # ===============================================================
 # =======================  Message  =============================
 # ===============================================================
-class Message(models.Model):
-    message_id = models.IntegerField(primary_key=True, editable=False)
+class Notification(models.Model):
+    notification_id = models.IntegerField(primary_key=True, editable=False)
     receiver = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     subject = models.CharField(max_length=50)
     message = models.CharField(max_length=500)

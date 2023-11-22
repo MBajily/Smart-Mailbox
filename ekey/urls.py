@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, passcode, lock, profile, records, location
+from . import views, passcode, lock, profile, records, location, notifications
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -39,4 +39,7 @@ urlpatterns = [
 
     # Reset Password
     path('password/reset/', views.passwordReset, name="password_reset"),
+
+    # Notifications
+    path('notifications/', notifications.notifications, name="notifications"),
     ]
