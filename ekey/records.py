@@ -61,7 +61,7 @@ def records(request):
                 if record["success"] == 1:
                     element["message"] = "تم فتح الصندوق باستخدام الكود " + "(***" + record["keyboardPwd"][:5] + ")"
                 else:
-                    element["message"] = "فشلت عملية فتح الصندوق بالكود " + "(***" + record["keyboardPwd"][:5] + ")"
+                    element["message"] = "محاولة فاشلة لفتح الصندوق بالكود " + "(***" + record["keyboardPwd"][:5] + ")"
 
             elif record_type == 48:
                 element["message"] = "تحذير! تم اكتشاف محاولات وصول غير مصرح بها"
@@ -103,8 +103,8 @@ def recordsCallback(request):
                 timestamp =  int(record.get('lockDate'))/1000
                 lockDate = datetime.datetime.fromtimestamp(timestamp)
 
-                notification = Notification(lockId=lockId, recordType=recordType, success=success, keyboardPwd=keyboardPwd, lockDate=lockDate)
-                notification.save()
+                record = Record(lockId=lockId, recordType=recordType, success=success, keyboardPwd=keyboardPwd, lockDate=lockDate)
+                record.save()
 
             response = {"success"} 
             return HttpResponse(response, status=200)

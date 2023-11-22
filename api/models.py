@@ -126,31 +126,21 @@ class Passcode(models.Model):
 
 
 # ===============================================================
-# ========================  Record  =============================
+# =======================  Message  =============================
 # ===============================================================
-class Record(models.Model):
-    Stauts = (
-        ('Lock', 0),
-        ('Unlock', 1),
-        ('Failed', 2)
-        )
-    Methods = (
-        ('App', 'App'),
-        ('Pin', 'Pin'),
-        )
-
-    record_id = models.IntegerField(primary_key=True, editable=False)
-    lock = models.ForeignKey(Lock, null=True, on_delete=models.SET_NULL)
-    status = models.CharField(max_length=50, choices=Stauts)
-    method = models.CharField(max_length=50, choices=Methods)
+class Message(models.Model):
+    message_id = models.IntegerField(primary_key=True, editable=False)
+    receiver = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    subject = models.CharField(max_length=50)
+    message = models.CharField(max_length=500)
     date = models.DateTimeField(auto_now_add=True)
 
 
 # ===============================================================
 # ====================  Notifications  ==========================
 # ===============================================================
-class Notification(models.Model):
-    notification_id = models.IntegerField(primary_key=True, editable=False)
+class Record(models.Model):
+    record_id = models.IntegerField(primary_key=True, editable=False)
     lockId = models.CharField(max_length=100, null=True)
     recordType = models.CharField(max_length=100, null=True)
     success = models.CharField(max_length=100, null=True)
