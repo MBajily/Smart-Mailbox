@@ -266,7 +266,7 @@ def passwordReset(request):
                 return HttpResponse(status=400)
             print(email)
 
-            form = PasswordResetForm({'email': email})
+            form = PasswordResetForm({'email': email, 'site_name':"sahlbox.com"})
             if form.is_valid():
                 form.save(
                     request=request,
@@ -281,7 +281,7 @@ def passwordReset(request):
                 # return JsonResponse({'success': False, 'errors': form.errors})
 
         except Exception as e:
-            return HttpResponse(status=400)
+            return HttpResponse(e, status=400)
 
     else:
         return HttpResponse(status=400)

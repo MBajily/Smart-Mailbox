@@ -22,6 +22,7 @@ urlpatterns = [
     path('lock/name/update/', lock.lockNameUpdate, name="lockNameUpdate"),
     path('lock/sound/update/', lock.lockSoundUpdate, name="lockSoundUpdate"),
     path('lock/delete/', lock.lockDelete, name="lockDelete"),
+    path('lock/auto_lock/', lock.lockAutoLock, name="lockAutoLock"),
 
     # Lock Location
     path('lock/location/', location.lockLocation, name="lockLocation"),

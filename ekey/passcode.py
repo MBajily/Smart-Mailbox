@@ -88,7 +88,6 @@ def passcodeNew(request):
             data = json.loads(request.body.decode('utf-8'))
             lockId = data.get('lockId')
             passcodeType = data.get('passcodeType')
-
             payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'keyboardPwdType':int(passcodeType), 'startDate':date, 'date':date}
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             r = requests.get('https://cnapi.ttlock.com/v3/keyboardPwd/get', headers=headers, params=payload)

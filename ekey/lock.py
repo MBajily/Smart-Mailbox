@@ -189,3 +189,32 @@ def lockSoundUpdate(request):
             return HttpResponse(status=401)
 
     return HttpResponse(status=401)
+
+
+@csrf_exempt
+def lockAutoLock(request):
+    if request.method == 'POST':
+        auth_token = request.META.get('HTTP_USER_TOKEN')
+        
+        if auth_token is None:
+            return HttpResponse(status=401)
+
+        try:
+            date = round(time.time()*1000)
+            data = json.loads(request.body.decode('utf-8'))
+            lockId = data.get('lockId')
+            value = data.get('sound')
+
+            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'seconds':5, 'type':2, 'date':date}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            r = requests.post('https://euapi.ttlock.com/v3/lock/setAutoLockTime', headers=headers, params=payload)
+            
+            if (r.json())["errcode"] != 0:
+                return HttpResponse(status=401)
+
+            return HttpResponse(status=200)
+
+        except Exception as e:
+            return HttpResponse(status=401)
+
+    return HttpResponse(status=401)

@@ -37,10 +37,8 @@ def profile(request):
         result["full_name"] = profile.full_name
         result["phone"] = profile.phone
         result["gender"] = profile.gender
-        result["birth_date"] = {}
-        result["birth_date"]["year"] = profile.birth_date.year
-        result["birth_date"]["month"] = profile.birth_date.month
-        result["birth_date"]["day"] = profile.birth_date.day
+        result["birth_date"] = str(profile.birth_date)
+
         return HttpResponse(json.dumps(result), status=200)
 
     except Exception as e:
