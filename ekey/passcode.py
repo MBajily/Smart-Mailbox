@@ -88,18 +88,21 @@ def passcodeNew(request):
             data = json.loads(request.body.decode('utf-8'))
             lockId = data.get('lockId')
             passcodeType = data.get('passcodeType')
-            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId, 'keyboardPwdType':int(passcodeType), 'startDate':date, 'date':date}
+            passcodeName = data.get('passcodeName')
+            payload = {'clientId':clientId, 'accessToken':auth_token, 'lockId':lockId,
+            'keyboardPwdType':int(passcodeType), 'keyboardPwdName':passcodeName,
+            'startDate':date, 'date':date}
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             r = requests.get('https://cnapi.ttlock.com/v3/keyboardPwd/get', headers=headers, params=payload)
             
             if "errcode" in (r.json()):
-                return HttpResponse(status=401)
+                return HttpResponse(r, status=401)
 
             # print(r.status_code, r.json()["keyboardPwdId"])
             return HttpResponse(r)
 
-        except:
-            return HttpResponse(status=401)
+        except Exception as e:
+            return HttpResponse(e, status=401)
 
     return HttpResponse(status=400)
 

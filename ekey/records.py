@@ -75,6 +75,12 @@ def records(request):
             elif record_type == 10:
                 element["message"] = "تم فتح الصندوق باستخدام المفتاح اليدوي"
             
+            elif record_type == 47:
+                element["message"] = "تم إغلاق القفل بواسطة الضغط على مفتاح القفل"
+
+            else:
+                element["message"] = "تحذير! فشلت عملية فتح القفل"
+            
             timestamp =  int(record["lockDate"])/1000
             recordDate = datetime.datetime.fromtimestamp(timestamp)
             element["date"] = str(recordDate)
